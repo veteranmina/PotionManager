@@ -1,0 +1,66 @@
+name: PotionManager
+version: 4.1.2
+main: me.veritasluxmea.PotionsManager.Main
+description: PotionManager
+author: veritasluxmea
+api-version: '1.21.10'
+
+commands:
+  potion:
+    usage: /<command> <effect> [duration] [power] [player] | /<command> list
+    description: Enable or Disable potion effect for self or player.
+    aliases: [pot, peffect]
+  potionmanager:
+    usage: /<command> [help|reload]
+    description: Potion manager's main command
+    aliases: [pm, potmgr]
+
+permissions:
+  # Base Permissions
+  potionmanager.self:
+    description: Permission to use potion effects on yourself
+    default: true
+
+  potionmanager.other:
+    description: Permission to use potion effects on other players
+    default: op
+
+  potionmanager.reload:
+    description: Permission to reload the plugin configuration
+    default: op
+
+  # Tier Permissions (control max duration and power limits)
+  potionmanager.tier.vip:
+    description: Unlocks Tier 2 limits for all effects (VIP rank)
+    default: false
+
+  potionmanager.tier.premium:
+    description: Unlocks Tier 3 limits for all effects (Premium rank)
+    default: false
+
+  potionmanager.tier.unlimited:
+    description: Unlocks Tier 4 limits - infinite duration, no cooldowns (Ultimate rank)
+    default: false
+
+  # Wildcard Permissions
+  potionmanager.tier.*:
+    description: Grants all tier permissions (Tier 4 limits - infinite)
+    default: op
+    children:
+      potionmanager.tier.vip: true
+      potionmanager.tier.premium: true
+      potionmanager.tier.unlimited: true
+
+  potionmanager.*:
+    description: Grants all PotionManager permissions
+    default: op
+    children:
+      potionmanager.self: true
+      potionmanager.other: true
+      potionmanager.reload: true
+      potionmanager.tier.*: true
+
+# Note: Individual effect permissions (potionmanager.effect.speed, etc.)
+# are configured in config.yml under each effect's "permission" field.
+# This allows you to enable/disable effects and set custom permissions
+# without modifying plugin.yml.

@@ -1,0 +1,883 @@
+#=================================================================================================#
+#                                 Main Configuration of Potion Manager
+#=================================================================================================#
+#
+#           Originally coded by H!DD3N!NJA
+#           Recoded by VeritasLuxMea for 1.21.10
+#
+#
+#
+#=================================================================================================#
+
+# Global Tier Display Names
+# These names will be shown to players for all effects
+tier_display_names:
+  tier1: "Basic"
+  tier2: "VIP"
+  tier3: "Premium"
+  tier4: "Ultimate"
+
+Messages:
+  Prefix: "&b&l[&f&lPotions&b&l]&r"
+  No_Permission: "{Prefix} &c&lPermission Denied! &7You lack the required permissions."
+  Player_Not_Found: "{Prefix} &c&lPlayer Not Found! &7Cannot find player &e{target}&7."
+  Reload: "{Prefix} &a&lSuccess! &7Configuration reloaded."
+  Cooldown: "{Prefix} &c&lCooldown Active! &7Wait &e&l{time} &7before using &b{Effect} &7again."
+
+Potion_Effect:
+  Enabled: "{Prefix} &a&l✓ Enabled &7{Effect} effect."
+  Disabled: "{Prefix} &c&l✗ Disabled &7{Effect} effect."
+  Target_Enabled: "{Prefix} &a&l✓ Applied &7{Effect} to &e{target}&7."
+  Target_Disabled: "{Prefix} &c&l✗ Removed &7{Effect} from &e{target}&7."
+
+# Potion Effect Configuration
+# Each effect can be individually configured
+# enabled: true/false - Whether the effect can be used
+# permission: the permission node required (leave blank for no permission check)
+#
+# Tier Configuration:
+#   permission: Permission required for this tier (leave blank for no permission)
+#   max_duration: Maximum duration in seconds (use -1 for infinite duration)
+#   max_power: Maximum power level (0 = Level I, 1 = Level II, etc.)
+#   cooldown_seconds: Cooldown time in seconds before effect can be used again (0 = no cooldown)
+#
+# Note: Tier display names are configured globally in the tier_display_names section above
+
+effects:
+  # Speed Effect - Example of 4-tier configuration
+  speed:
+    enabled: true
+    permission: "potionmanager.effect.speed"
+    tiers:
+      tier1:
+        permission: ""                    # No extra permission needed for tier1
+        max_duration: 180                 # 3 minutes for basic users
+        max_power: 1                      # Level II max
+        cooldown_seconds: 300             # 5 minute cooldown
+      tier2:
+        permission: "potionmanager.tier.vip"     # VIP permission
+        max_duration: 600                 # 10 minutes for VIP
+        max_power: 3                      # Level IV max
+        cooldown_seconds: 180             # 3 minute cooldown
+      tier3:
+        permission: "potionmanager.tier.premium" # Premium permission
+        max_duration: 1200                # 20 minutes for premium
+        max_power: 5                      # Level VI max
+        cooldown_seconds: 60              # 1 minute cooldown
+      tier4:
+        permission: "potionmanager.tier.unlimited.speed" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                     # Maximum power
+        cooldown_seconds: 0               # No cooldown
+
+  # Regeneration Effect
+  regeneration:
+    enabled: true
+    permission: "potionmanager.effect.regeneration"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 60                  # 1 minute
+        max_power: 0                      # Level I only
+        cooldown_seconds: 600             # 10 minute cooldown
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 180                 # 3 minutes
+        max_power: 1                      # Level II
+        cooldown_seconds: 300             # 5 minute cooldown
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 600                 # 10 minutes
+        max_power: 3                      # Level IV
+        cooldown_seconds: 120             # 2 minute cooldown
+      tier4:
+        permission: "potionmanager.tier.unlimited.regeneration" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Fire Resistance (doesn't benefit from power levels)
+  fire_resistance:
+    enabled: true
+    permission: "potionmanager.effect.fireresistance"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 300                 # 5 minutes
+        max_power: 0                      # Always Level I
+        cooldown_seconds: 600             # 10 minute cooldown
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 900                 # 15 minutes
+        max_power: 0
+        cooldown_seconds: 300             # 5 minute cooldown
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 0
+        cooldown_seconds: 0               # No cooldown for infinite
+      tier4:
+        permission: "potionmanager.tier.unlimited.fire_resistance" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Strength Effect (very powerful, restricted tiers)
+  strength:
+    enabled: true
+    permission: "potionmanager.effect.strength"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 60                  # 1 minute
+        max_power: 0                      # Level I only
+        cooldown_seconds: 900             # 15 minute cooldown
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 120                 # 2 minutes
+        max_power: 1                      # Level II
+        cooldown_seconds: 600             # 10 minute cooldown
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 300                 # 5 minutes
+        max_power: 2                      # Level III (very strong!)
+        cooldown_seconds: 300             # 5 minute cooldown
+      tier4:
+        permission: "potionmanager.tier.unlimited.strength" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Jump Boost
+  jump_boost:
+    enabled: true
+    permission: "potionmanager.effect.jumpboost"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 180
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 600
+        max_power: 4
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 1200
+        max_power: 6
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.jump_boost" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 11                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Night Vision
+  night_vision:
+    enabled: true
+    permission: "potionmanager.effect.nightvision"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 300                 # 5 minutes
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 900                 # 15 minutes
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 3600                # 1 hour!
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.night_vision" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Invisibility
+  invisibility:
+    enabled: true
+    permission: "potionmanager.effect.invisibility"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 120                 # 2 minutes
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 300                 # 5 minutes
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 600                 # 10 minutes
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.invisibility" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Water Breathing
+  water_breathing:
+    enabled: true
+    permission: "potionmanager.effect.waterbreathing"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 300
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 900
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 3600
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.water_breathing" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Haste
+  haste:
+    enabled: true
+    permission: "potionmanager.effect.haste"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 180
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 600
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 1200
+        max_power: 4
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.haste" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Resistance (very powerful)
+  resistance:
+    enabled: true
+    permission: "potionmanager.effect.resistance"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 60
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 180
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 600
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.resistance" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Slow Falling
+  slow_falling:
+    enabled: true
+    permission: "potionmanager.effect.slowfalling"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 180
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 600
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 1200
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.slow_falling" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Absorption
+  absorption:
+    enabled: true
+    permission: "potionmanager.effect.absorption"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 120
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 300
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 600
+        max_power: 4
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.absorption" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Saturation (instant food restore - very powerful)
+  saturation:
+    enabled: false
+    permission: "potionmanager.effect.saturation"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 5
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 10
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 30
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.saturation" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Health Boost
+  health_boost:
+    enabled: true
+    permission: "potionmanager.effect.health_boost"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 180
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 600
+        max_power: 3
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 1200
+        max_power: 5
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.health_boost" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Luck
+  luck:
+    enabled: true
+    permission: "potionmanager.effect.luck"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 300
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 600
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 1200
+        max_power: 4
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.luck" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Dolphins Grace
+  dolphins_grace:
+    enabled: true
+    permission: "potionmanager.effect.dolphinsgrace"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 180
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 600
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 1200
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.dolphinsgrace" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Conduit Power
+  conduit_power:
+    enabled: true
+    permission: "potionmanager.effect.conduitpower"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 180
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 600
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 1200
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.conduitpower" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+
+
+  # --- Negative Effects (Usually admin-only with tier restrictions) ---
+
+  # Slowness
+  slowness:
+    enabled: false
+    permission: "potionmanager.effect.slowness"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 30
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 60
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 120
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.slowness" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Mining Fatigue
+  mining_fatigue:
+    enabled: false
+    permission: "potionmanager.effect.mining_fatigue"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 30
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 60
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 120
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.mining_fatigue" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Weakness
+  weakness:
+    enabled: false
+    permission: "potionmanager.effect.weakness"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 30
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 60
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 120
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.weakness" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Poison
+  poison:
+    enabled: false
+    permission: "potionmanager.effect.poison"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 15
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 30
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 60
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.poison" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Wither
+  wither:
+    enabled: false
+    permission: "potionmanager.effect.wither"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 10
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 20
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 40
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.wither" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Nausea (Confusion)
+  nausea:
+    enabled: false
+    permission: "potionmanager.effect.nausea"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 15
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 30
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 60
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.nausea" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+
+  # Blindness
+  blindness:
+    enabled: false
+    permission: "potionmanager.effect.blindness"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 10
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 20
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 40
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.blindness" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+
+  # Hunger
+  hunger:
+    enabled: false
+    permission: "potionmanager.effect.hunger"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 15
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 30
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 60
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.hunger" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+
+  # Levitation
+  levitation:
+    enabled: false
+    permission: "potionmanager.effect.levitation"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 5
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 10
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 20
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.levitation" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+
+  # Glowing
+  glowing:
+    enabled: true
+    permission: "potionmanager.effect.glowing"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 60
+        max_power: 0
+        cooldown_seconds: 120           # 2 minute cooldown
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 180
+        max_power: 0
+        cooldown_seconds: 60            # 1 minute cooldown
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 600
+        max_power: 0
+        cooldown_seconds: 30            # 30 second cooldown
+      tier4:
+        permission: "potionmanager.tier.unlimited.glowing" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+
+  # Unluck
+  unluck:
+    enabled: false
+    permission: "potionmanager.effect.unluck"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 30
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 60
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 120
+        max_power: 2
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.unluck" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+
+  # Bad Omen
+  bad_omen:
+    enabled: false
+    permission: "potionmanager.effect.badomen"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 60
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 120
+        max_power: 1
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 300
+        max_power: 4
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.badomen" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+
+  # Hero of the Village
+  hero_of_the_village:
+    enabled: true
+    permission: "potionmanager.effect.heroofthevillage"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 300               # 5 minutes
+        max_power: 0
+        cooldown_seconds: 900           # 15 minute cooldown
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 900               # 15 minutes
+        max_power: 1
+        cooldown_seconds: 600           # 10 minute cooldown
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 1800              # 30 minutes
+        max_power: 2
+        cooldown_seconds: 300           # 5 minute cooldown
+      tier4:
+        permission: "potionmanager.tier.unlimited.heroofthevillage" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+
+  # Darkness
+  darkness:
+    enabled: false
+    permission: "potionmanager.effect.darkness"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 10
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.moderator"
+        max_duration: 20
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.admin"
+        max_duration: 40
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.darkness" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+
+# === PERMISSION STRUCTURE ===
+#
+# Base Permissions (Required for all potion use):
+#   potionmanager.self  - Use potions on yourself
+#   potionmanager.other - Use potions on other players
+#
+# Effect Permissions (Required to use specific effects):
+#   potionmanager.effect.<effectname>
+#   Example: potionmanager.effect.speed
+#
+# Tier Permissions (Unlock higher limits):
+#   Tier 1: Default tier, no extra permission needed (permission: "")
+#   Tier 2: potionmanager.tier.vip (or custom permission)
+#   Tier 3: potionmanager.tier.premium (or custom permission)
+#   Tier 4: potionmanager.tier.unlimited (infinite duration, no cooldowns)
+#
+# Example Permission Setup:
+#   Default Players:
+#     - potionmanager.self
+#     - potionmanager.effect.speed
+#     - potionmanager.effect.jump_boost
+#     → Gets Tier 1 limits for these effects
+#
+#   VIP Players (add):
+#     - potionmanager.tier.vip
+#     → Automatically gets Tier 2 limits for all effects they can use
+#
+#   Premium Players (add):
+#     - potionmanager.tier.premium
+#     → Automatically gets Tier 3 limits
+#
+#   Unlimited Players (add):
+#     - potionmanager.tier.unlimited
+#     → Automatically gets Tier 4 limits (infinite duration, no cooldowns)
+#
+# === HOW TIERS WORK ===
+# The plugin checks permissions from highest to lowest:
+#   1. Check if player has tier4 permission → Use tier4 limits (infinite)
+#   2. Check if player has tier3 permission → Use tier3 limits
+#   3. Check if player has tier2 permission → Use tier2 limits
+#   4. Default to tier1 limits
+#
+# This means if a player has MULTIPLE tier permissions,
+# they will automatically use the HIGHEST tier available.
+
+#Notifies operators if there is an update available
+Update_Checker: true
+Debug: false
