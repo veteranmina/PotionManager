@@ -52,7 +52,11 @@ public class Main extends JavaPlugin {
 
   public void registerCommands() {
     getCommand("PotionManager").setExecutor((CommandExecutor)new Commands(this));
-    getCommand("Potion").setExecutor((CommandExecutor)new PotionCommand(this));
+
+    // Register PotionCommand as both executor and tab completer
+    PotionCommand potionCommand = new PotionCommand(this);
+    getCommand("Potion").setExecutor(potionCommand);
+    getCommand("Potion").setTabCompleter(potionCommand);
   }
 
 

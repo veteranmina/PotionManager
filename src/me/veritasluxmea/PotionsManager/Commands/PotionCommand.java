@@ -7,6 +7,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -14,7 +15,11 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.ConfigurationSection;
 
-public class PotionCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class PotionCommand implements CommandExecutor, TabCompleter {
 
     private final JavaPlugin plugin;
 
@@ -162,6 +167,18 @@ public class PotionCommand implements CommandExecutor {
             }
         }
 
+        // Check max active potions limit (only when adding effects, not removing, and not for console)
+        if (!isConsole && !targetPlayer.hasPotionEffect(effectType)) {
+            int maxActivePotions = config.getInt("MaxActivePotions", 1);
+            if (maxActivePotions > 0) { // 0 means bypass this check
+                int activePotions = targetPlayer.getActivePotionEffects().size();
+                if (activePotions >= maxActivePotions) {
+                    sender.sendMessage("§c§lMaximum Effects Reached! §7You can only have §e" + maxActivePotions + " §7active effect(s) at once.");
+                    return true;
+                }
+            }
+        }
+
         // Cooldown check (only for applying effects, not removing, and not for console)
         if (!isConsole && !targetPlayer.hasPotionEffect(effectType)) {
             String tier = getTierForPlayer(commandSender, effectName);
@@ -255,9 +272,9 @@ public class PotionCommand implements CommandExecutor {
             return;
         }
 
-        player.sendMessage("§b§l╔══════════════════════════════╗");
-        player.sendMessage("§b§l║ §f§lAvailable Potion Effects §b§l                              ║");
-        player.sendMessage("§b§l╚══════════════════════════════╝");
+        player.sendMessage("§b§l╔════════════════╗");
+        player.sendMessage("§b§l║ §f§lAvailable Potion Effects §b§l              ║");
+        player.sendMessage("§b§l╚════════════════╝");
 
         int availableCount = 0;
 
@@ -570,5 +587,83 @@ public class PotionCommand implements CommandExecutor {
         } else {
             return (Player) sender;
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
+        List<String> completions = new ArrayList<>();
+
+        if (args.length == 1) {
+            // First argument: suggest "list" and all available effect names
+            completions.add("list");
+
+            ConfigurationSection effects = plugin.getConfig().getConfigurationSection("effects");
+            if (effects != null) {
+                for (String effectName : effects.getKeys(false)) {
+                    ConfigurationSection effectSection = effects.getConfigurationSection(effectName);
+                    if (effectSection == null) continue;
+
+                    boolean enabled = effectSection.getBoolean("enabled", false);
+                    if (!enabled) continue;
+
+                    // For players, check permissions
+                    if (sender instanceof Player) {
+                        Player player = (Player) sender;
+                        String permission = effectSection.getString("permission");
+                        if (permission != null && !permission.isEmpty() && !player.hasPermission(permission)) {
+                            continue;
+                        }
+                    }
+
+                    completions.add(effectName);
+                }
+            }
+
+            // Filter based on what the player has typed so far
+            return completions.stream()
+                    .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        if (args.length == 2) {
+            // Second argument: could be duration or player name
+            completions.add("<duration>");
+
+            // Add online player names
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                completions.add(player.getName());
+            }
+
+            return completions.stream()
+                    .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        if (args.length == 3) {
+            // Third argument: could be power or player name
+            completions.add("<power>");
+
+            // Add online player names
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                completions.add(player.getName());
+            }
+
+            return completions.stream()
+                    .filter(s -> s.toLowerCase().startsWith(args[2].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        if (args.length == 4) {
+            // Fourth argument: player name only
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                completions.add(player.getName());
+            }
+
+            return completions.stream()
+                    .filter(s -> s.toLowerCase().startsWith(args[3].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        return completions;
     }
 }

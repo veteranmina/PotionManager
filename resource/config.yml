@@ -17,6 +17,13 @@ tier_display_names:
   tier3: "Premium"
   tier4: "Ultimate"
 
+# Maximum Active Potions
+# Limits how many potion effects a player can have active at once
+# Note if a player has used a potion item or is by a conduit/beacon these will be counted as effects
+# Set to 0 to disable this check (unlimited effects allowed)
+# Default: 1
+MaxActivePotions: 1
+
 Messages:
   Prefix: "&b&l[&f&lPotions&b&l]&r"
   No_Permission: "{Prefix} &c&lPermission Denied! &7You lack the required permissions."
@@ -116,7 +123,7 @@ effects:
         max_power: 0
         cooldown_seconds: 0               # No cooldown for infinite
       tier4:
-        permission: "potionmanager.tier.unlimited.fire_resistance" # Unlimited permission
+        permission: "potionmanager.tier.unlimited.fireresistance" # Unlimited permission
         max_duration: -1                  # INFINITE DURATION!
         max_power: 10                      # Maximum power
         cooldown_seconds: 0               # No cooldown
@@ -166,7 +173,7 @@ effects:
         max_power: 6
         cooldown_seconds: 0             # No cooldown (configure as needed)
       tier4:
-        permission: "potionmanager.tier.unlimited.jump_boost" # Unlimited permission
+        permission: "potionmanager.tier.unlimited.jumpboost" # Unlimited permission
         max_duration: -1                  # INFINITE DURATION!
         max_power: 11                      # Maximum power
         cooldown_seconds: 0               # No cooldown
@@ -191,7 +198,7 @@ effects:
         max_power: 0
         cooldown_seconds: 0             # No cooldown (configure as needed)
       tier4:
-        permission: "potionmanager.tier.unlimited.night_vision" # Unlimited permission
+        permission: "potionmanager.tier.unlimited.nightvision" # Unlimited permission
         max_duration: -1                  # INFINITE DURATION!
         max_power: 10                      # Maximum power
         cooldown_seconds: 0               # No cooldown
@@ -241,7 +248,7 @@ effects:
         max_power: 0
         cooldown_seconds: 0             # No cooldown (configure as needed)
       tier4:
-        permission: "potionmanager.tier.unlimited.water_breathing" # Unlimited permission
+        permission: "potionmanager.tier.unlimited.waterbreathing" # Unlimited permission
         max_duration: -1                  # INFINITE DURATION!
         max_power: 10                      # Maximum power
         cooldown_seconds: 0               # No cooldown
@@ -316,7 +323,7 @@ effects:
         max_power: 0
         cooldown_seconds: 0             # No cooldown (configure as needed)
       tier4:
-        permission: "potionmanager.tier.unlimited.slow_falling" # Unlimited permission
+        permission: "potionmanager.tier.unlimited.slowfalling" # Unlimited permission
         max_duration: -1                  # INFINITE DURATION!
         max_power: 10                      # Maximum power
         cooldown_seconds: 0               # No cooldown
@@ -373,7 +380,7 @@ effects:
   # Health Boost
   health_boost:
     enabled: true
-    permission: "potionmanager.effect.health_boost"
+    permission: "potionmanager.effect.healthboost"
     tiers:
       tier1:
         permission: ""
@@ -391,7 +398,7 @@ effects:
         max_power: 5
         cooldown_seconds: 0             # No cooldown (configure as needed)
       tier4:
-        permission: "potionmanager.tier.unlimited.health_boost" # Unlimited permission
+        permission: "potionmanager.tier.unlimited.healthboost" # Unlimited permission
         max_duration: -1                  # INFINITE DURATION!
         max_power: 10                      # Maximum power
         cooldown_seconds: 0               # No cooldown
@@ -502,7 +509,7 @@ effects:
   # Mining Fatigue
   mining_fatigue:
     enabled: false
-    permission: "potionmanager.effect.mining_fatigue"
+    permission: "potionmanager.effect.miningfatigue"
     tiers:
       tier1:
         permission: ""
@@ -520,7 +527,7 @@ effects:
         max_power: 2
         cooldown_seconds: 0             # No cooldown (configure as needed)
       tier4:
-        permission: "potionmanager.tier.unlimited.mining_fatigue" # Unlimited permission
+        permission: "potionmanager.tier.unlimited.miningfatigue" # Unlimited permission
         max_duration: -1                  # INFINITE DURATION!
         max_power: 10                      # Maximum power
         cooldown_seconds: 0               # No cooldown
