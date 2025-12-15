@@ -74,10 +74,10 @@ public class Main extends JavaPlugin {
       UpdateChecker updater = new UpdateChecker(this, "DaYV2289");
       try {
         if (updater.checkForUpdates()) {
-          getLogger().info(messages.getConfig().getString("system.update_checker.available")
-              .replace("{new_version}", UpdateChecker.getLatestVersion()));
-          getLogger().info(messages.getConfig().getString("system.update_checker.download")
-              .replace("{url}", UpdateChecker.getResourceURL()));
+          Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.update_checker.available",
+              MessagesManager.placeholder("new_version", UpdateChecker.getLatestVersion())));
+          Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.update_checker.download",
+              MessagesManager.placeholder("url", UpdateChecker.getResourceURL())));
         } else {
           getServer().getConsoleSender().sendMessage(messages.getMessage("system.update_checker.checking",
               MessagesManager.placeholder("version", getDescription().getVersion())));

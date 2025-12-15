@@ -1,7 +1,6 @@
 package me.veritasluxmea.PotionsManager.Listeners;
 
 import me.veritasluxmea.PotionsManager.Main;
-import me.veritasluxmea.PotionsManager.MessagesManager;
 import me.veritasluxmea.PotionsManager.Utils.UpdateChecker;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -37,10 +36,11 @@ public class PlayerJoinListener
           List<String> updateLines = Main.messages.getConfig().getStringList("player.join.update_available");
           for (String line : updateLines) {
             player.sendMessage(MiniMessage.miniMessage().deserialize(
-                line.replace("{prefix}", Main.messages.getConfig().getString("prefix"))
-                    .replace("{current}", version)
-                    .replace("{latest}", UpdateChecker.getLatestVersion())
-                    .replace("{url}", UpdateChecker.getResourceURL())
+                line,
+                Placeholder.parsed("prefix", Main.messages.getConfig().getString("prefix")),
+                Placeholder.unparsed("current", version),
+                Placeholder.unparsed("latest", UpdateChecker.getLatestVersion()),
+                Placeholder.unparsed("url", UpdateChecker.getResourceURL())
             ));
           }
         }

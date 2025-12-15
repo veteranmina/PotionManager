@@ -1,10 +1,8 @@
 package me.veritasluxmea.PotionsManager.Commands;
 
 import me.veritasluxmea.PotionsManager.Main;
-import me.veritasluxmea.PotionsManager.MessagesManager;
 import me.veritasluxmea.PotionsManager.Utils.CooldownManager;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -195,7 +193,7 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
                 String formattedTime = cooldownManager.formatCooldownTime(remainingSeconds);
 
                 Main.messages.sendMessage(sender, "potion.cooldown.active",
-                    Placeholder.unparsed("prefix", Main.messages.getConfig().getString("prefix")),
+                    Placeholder.parsed("prefix", Main.messages.getConfig().getString("prefix")),
                     Placeholder.unparsed("time", formattedTime),
                     Placeholder.unparsed("effect", formatEffectName(effectName)));
                 return true;
@@ -315,7 +313,7 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
                 String tierColorTag = Main.messages.getConfig().getString("potion.tier_colors." + tier, "<white>");
 
                 Main.messages.sendMessage(player, "potion.list.effect_line",
-                    Placeholder.unparsed("tier_color", tierColorTag),
+                    Placeholder.parsed("tier_color", tierColorTag),
                     Placeholder.unparsed("effect_name", formatEffectName(effectName)),
                     Placeholder.unparsed("tier_label", tierDisplayName.toUpperCase()));
             }
@@ -325,7 +323,8 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         List<String> footerLines = Main.messages.getConfig().getStringList("potion.list.footer");
         for (String line : footerLines) {
             player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage().deserialize(
-                line.replace("{count}", String.valueOf(availableCount))
+                line,
+                Placeholder.unparsed("count", String.valueOf(availableCount))
             ));
         }
     }

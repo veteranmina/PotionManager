@@ -120,7 +120,7 @@ public class DataManager {
                     playerUUID = UUID.fromString(playerUUIDString);
                 } catch (IllegalArgumentException e) {
                     plugin.getLogger().warning(Main.messages.getConfig().getString("data.cooldowns.invalid_uuid")
-                        .replace("{uuid}", playerUUIDString));
+                        .replace("<uuid>", playerUUIDString));
                     continue;
                 }
 
@@ -167,8 +167,8 @@ public class DataManager {
             cooldownManager.loadCooldowns(loadedCooldowns);
 
             plugin.getLogger().info(Main.messages.getConfig().getString("data.cooldowns.load_success")
-                .replace("{loaded}", String.valueOf(loadedCount))
-                .replace("{expired}", String.valueOf(expiredCount)));
+                .replace("<loaded>", String.valueOf(loadedCount))
+                .replace("<expired>", String.valueOf(expiredCount)));
 
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, Main.messages.getConfig().getString("data.cooldowns.load_error"), e);

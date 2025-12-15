@@ -1,7 +1,6 @@
 package me.veritasluxmea.PotionsManager.Commands;
 
 import me.veritasluxmea.PotionsManager.Main;
-import me.veritasluxmea.PotionsManager.MessagesManager;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.Command;
@@ -28,7 +27,8 @@ public class Commands
         List<String> headerLines = Main.messages.getConfig().getStringList("commands.potionmanager.header");
         for (String line : headerLines) {
           sender.sendMessage(MiniMessage.miniMessage().deserialize(
-              line.replace("{version}", this.main.getDescription().getVersion())
+              line,
+              Placeholder.unparsed("version", this.main.getDescription().getVersion())
           ));
         }
         return true;
@@ -98,7 +98,7 @@ public class Commands
                         Main.messages.setup((Plugin)this.main);
 
                         Main.messages.sendMessage(sender, "commands.potionmanager.reload.success",
-                            Placeholder.unparsed("prefix", Main.messages.getConfig().getString("prefix")));
+                            Placeholder.parsed("prefix", Main.messages.getConfig().getString("prefix")));
                         Main.messages.sendMessage(sender, "commands.potionmanager.reload.effect_count",
                             Placeholder.unparsed("count", String.valueOf(effectCount)));
                         this.main.getLogger().info(sender.getName() + " reloaded the configuration (" + effectCount + " effects)");
@@ -121,7 +121,7 @@ public class Commands
                 }
             } else {
                 Main.messages.sendMessage(sender, "generic.no_permission",
-                    Placeholder.unparsed("prefix", Main.messages.getConfig().getString("prefix")));
+                    Placeholder.parsed("prefix", Main.messages.getConfig().getString("prefix")));
                 return true;
             }
         }
