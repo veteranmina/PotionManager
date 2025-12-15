@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -55,7 +54,7 @@ public class SettingsManager
     try {
       this.config.save(this.cfile);
     } catch (IOException e) {
-      Bukkit.getServer().getLogger().severe(ChatColor.RED + "Could not save config.yml!");
+      Bukkit.getServer().getLogger().severe("Could not save config.yml!");
     }
   }
 

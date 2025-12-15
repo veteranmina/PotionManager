@@ -148,49 +148,6 @@ public class CooldownManager {
     }
 
     /**
-     * Clears all cooldowns for a specific player.
-     *
-     * @param playerUUID The UUID of the player
-     */
-    public void clearPlayerCooldowns(UUID playerUUID) {
-        cooldowns.remove(playerUUID);
-    }
-
-    /**
-     * Clears a specific cooldown for a player's effect and tier.
-     *
-     * @param playerUUID The UUID of the player
-     * @param effectName The name of the effect
-     * @param tierName The tier name
-     */
-    public void clearCooldown(UUID playerUUID, String effectName, String tierName) {
-        Map<String, Map<String, Long>> playerCooldowns = cooldowns.get(playerUUID);
-        if (playerCooldowns == null) {
-            return;
-        }
-
-        Map<String, Long> effectCooldowns = playerCooldowns.get(effectName);
-        if (effectCooldowns == null) {
-            return;
-        }
-
-        effectCooldowns.remove(tierName);
-        if (effectCooldowns.isEmpty()) {
-            playerCooldowns.remove(effectName);
-        }
-        if (playerCooldowns.isEmpty()) {
-            cooldowns.remove(playerUUID);
-        }
-    }
-
-    /**
-     * Clears all cooldowns for all players (typically used on shutdown).
-     */
-    public void clearAllCooldowns() {
-        cooldowns.clear();
-    }
-
-    /**
      * Gets all cooldowns data for serialization.
      *
      * @return A map of all cooldowns
@@ -234,6 +191,11 @@ public class CooldownManager {
     }
 
     /**
+     * Section below is not yet implemented but can be
+     * called to if PotionManager is implemented in other plugins
+     */
+
+    /**
      * Removes expired cooldowns from memory.
      * This can be called periodically to clean up old data.
      */
@@ -255,5 +217,48 @@ public class CooldownManager {
 
             return playerCooldowns.isEmpty();
         });
+    }
+
+    /**
+     * Clears all cooldowns for all players (typically used on shutdown).
+     */
+    public void clearAllCooldowns() {
+        cooldowns.clear();
+    }
+
+    /**
+     * Clears a specific cooldown for a player's effect and tier.
+     *
+     * @param playerUUID The UUID of the player
+     * @param effectName The name of the effect
+     * @param tierName The tier name
+     */
+    public void clearCooldown(UUID playerUUID, String effectName, String tierName) {
+        Map<String, Map<String, Long>> playerCooldowns = cooldowns.get(playerUUID);
+        if (playerCooldowns == null) {
+            return;
+        }
+
+        Map<String, Long> effectCooldowns = playerCooldowns.get(effectName);
+        if (effectCooldowns == null) {
+            return;
+        }
+
+        effectCooldowns.remove(tierName);
+        if (effectCooldowns.isEmpty()) {
+            playerCooldowns.remove(effectName);
+        }
+        if (playerCooldowns.isEmpty()) {
+            cooldowns.remove(playerUUID);
+        }
+    }
+
+    /**
+     * Clears all cooldowns for a specific player.
+     *
+     * @param playerUUID The UUID of the player
+     */
+    public void clearPlayerCooldowns(UUID playerUUID) {
+        cooldowns.remove(playerUUID);
     }
 }

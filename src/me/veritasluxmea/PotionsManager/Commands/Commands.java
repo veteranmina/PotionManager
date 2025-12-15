@@ -1,13 +1,16 @@
 package me.veritasluxmea.PotionsManager.Commands;
 
 import me.veritasluxmea.PotionsManager.Main;
-import me.veritasluxmea.PotionsManager.Methods;
-import org.bukkit.ChatColor;
+import me.veritasluxmea.PotionsManager.MessagesManager;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
+
+import java.util.List;
 
 public class Commands
   implements CommandExecutor {
@@ -22,34 +25,46 @@ public class Commands
     FileConfiguration config = Main.settings.getConfig();
     if (cmd.getName().equalsIgnoreCase("PotionManager")) {
       if (args.length == 0) {
-        sender.sendMessage(ChatColor.DARK_GRAY + "╔════════════════════════════════╗");
-        sender.sendMessage(ChatColor.AQUA + "  " + ChatColor.BOLD + "Potion Manager " + ChatColor.RESET +
-            ChatColor.GRAY + "v" + this.main.getDescription().getVersion());
-        sender.sendMessage(ChatColor.GRAY + "  By " + ChatColor.AQUA + ChatColor.BOLD + "veritasluxmea");
-        sender.sendMessage(ChatColor.DARK_GRAY + "╚════════════════════════════════╝");
-        sender.sendMessage(ChatColor.GRAY + "Use " + ChatColor.YELLOW + "/potionmanager help" + ChatColor.GRAY + " for commands");
+        List<String> headerLines = Main.messages.getConfig().getStringList("commands.potionmanager.header");
+        for (String line : headerLines) {
+          sender.sendMessage(MiniMessage.miniMessage().deserialize(
+              line.replace("{version}", this.main.getDescription().getVersion())
+          ));
+        }
         return true;
       }
 
       if (args[0].equalsIgnoreCase("Help")) {
-        sender.sendMessage(ChatColor.AQUA + "" + ChatColor.BOLD + "╔═══════════════════════════════════╗");
-        sender.sendMessage(ChatColor.AQUA + "" + ChatColor.BOLD + "║ " + ChatColor.WHITE + "" + ChatColor.BOLD + "Potion Manager Commands" + ChatColor.AQUA + "" + ChatColor.BOLD + "       ║");
-        sender.sendMessage(ChatColor.AQUA + "" + ChatColor.BOLD + "╚═══════════════════════════════════╝");
-        sender.sendMessage("");
-        sender.sendMessage(ChatColor.YELLOW + "  /potion " + ChatColor.WHITE + "<effect> " + ChatColor.GRAY + "[duration] [power] [player]");
-        sender.sendMessage(ChatColor.DARK_GRAY + "  ├─ " + ChatColor.GRAY + "Apply or remove potion effects");
-        sender.sendMessage(ChatColor.DARK_GRAY + "  └─ " + ChatColor.GRAY + "Example: " + ChatColor.YELLOW + "/potion speed 60 2");
-        sender.sendMessage("");
-        sender.sendMessage(ChatColor.YELLOW + "  /potion list");
-        sender.sendMessage(ChatColor.DARK_GRAY + "  └─ " + ChatColor.GRAY + "View all available effects and your tier");
-        if (sender.hasPermission("potionmanager.*")) {
-            sender.sendMessage("");
-            sender.sendMessage(ChatColor.AQUA + "" + ChatColor.BOLD + "Admin Commands:");
-            sender.sendMessage(ChatColor.YELLOW + "  /potionmanager reload");
-            sender.sendMessage(ChatColor.DARK_GRAY + "  └─ " + ChatColor.GRAY + "Reload the configuration");
+        // Send help header
+        List<String> helpHeader = Main.messages.getConfig().getStringList("commands.potionmanager.help.header");
+        for (String line : helpHeader) {
+          sender.sendMessage(MiniMessage.miniMessage().deserialize(line));
         }
-        sender.sendMessage("");
-        sender.sendMessage(ChatColor.AQUA + "" + ChatColor.BOLD + "═══════════════════════════════════");
+
+        // Send regular commands
+        List<String> commands = Main.messages.getConfig().getStringList("commands.potionmanager.help.commands");
+        for (String line : commands) {
+          sender.sendMessage(MiniMessage.miniMessage().deserialize(line));
+        }
+
+        // Send admin commands if player has permission
+        if (sender.hasPermission("potionmanager.*")) {
+          List<String> adminHeader = Main.messages.getConfig().getStringList("commands.potionmanager.help.admin_header");
+          for (String line : adminHeader) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize(line));
+          }
+
+          List<String> adminCommands = Main.messages.getConfig().getStringList("commands.potionmanager.help.admin_commands");
+          for (String line : adminCommands) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize(line));
+          }
+        }
+
+        // Send footer
+        List<String> footer = Main.messages.getConfig().getStringList("commands.potionmanager.help.footer");
+        for (String line : footer) {
+          sender.sendMessage(MiniMessage.miniMessage().deserialize(line));
+        }
 
         return true;
       }
@@ -78,15 +93,20 @@ public class Commands
                             effectCount = reloadedConfig.getConfigurationSection("effects").getKeys(false).size();
                         }
 
-                        sender.sendMessage(Methods.color(reloadedConfig.getString("Messages.Reload")
-                                .replace("{Prefix}", reloadedConfig.getString("Messages.Prefix"))));
-                        sender.sendMessage(ChatColor.GRAY + "Loaded " + ChatColor.AQUA + "" + ChatColor.BOLD + effectCount + ChatColor.RESET + ChatColor.GRAY + " effects from config");
+                        // Also reload messages.yml
+                        Main.messages.reloadConfig();
+                        Main.messages.setup((Plugin)this.main);
+
+                        Main.messages.sendMessage(sender, "commands.potionmanager.reload.success",
+                            Placeholder.unparsed("prefix", Main.messages.getConfig().getString("prefix")));
+                        Main.messages.sendMessage(sender, "commands.potionmanager.reload.effect_count",
+                            Placeholder.unparsed("count", String.valueOf(effectCount)));
                         this.main.getLogger().info(sender.getName() + " reloaded the configuration (" + effectCount + " effects)");
 
                     } catch (Exception e) {
-                        sender.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "Error! " + ChatColor.RESET + ChatColor.GRAY + "Failed to reload configuration!");
+                        Main.messages.sendMessage(sender, "commands.potionmanager.reload.failure");
                         if (Main.settings.getConfig().getBoolean("Debug")) {
-                            sender.sendMessage(ChatColor.GRAY + "Check console for details");
+                            Main.messages.sendMessage(sender, "commands.potionmanager.reload.check_console");
                             e.printStackTrace();
                         }
                         this.main.getLogger().severe("Failed to reload config: " + e.getMessage());
@@ -96,11 +116,12 @@ public class Commands
                         return true;
                     }
                 } else {
-                    sender.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "Usage: " + ChatColor.RESET + ChatColor.GRAY + "/potionmanager reload");
+                    Main.messages.sendMessage(sender, "commands.potionmanager.reload.usage");
                     return true;
                 }
             } else {
-                sender.sendMessage(Methods.color(Methods.noPerm()));
+                Main.messages.sendMessage(sender, "generic.no_permission",
+                    Placeholder.unparsed("prefix", Main.messages.getConfig().getString("prefix")));
                 return true;
             }
         }

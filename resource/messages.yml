@@ -1,0 +1,199 @@
+#=================================================================================================#
+#                                 Messages Configuration
+#                              PotionManager Adventure API Messages
+#=================================================================================================#
+#
+# This file uses MiniMessage format for text formatting.
+# Documentation: https://docs.advntr.dev/minimessage/format.html
+#
+# Common tags:
+#   <red>, <green>, <blue>, <yellow>, <gray>, <white>, <gold>, <aqua>, etc.
+#   <bold>, <italic>, <underlined>, <strikethrough>
+#   <gradient:red:blue>Text</gradient>
+#   <hover:show_text:'Hover text'>Text</hover>
+#
+# Placeholders use {placeholder_name} syntax and are replaced by the plugin
+#
+#=================================================================================================#
+
+# Global prefix used in many messages
+prefix: "<aqua><bold>[<white><bold>Potions<aqua><bold>]<reset>"
+
+# ============================================
+# COMMAND MESSAGES - /potionmanager
+# ============================================
+commands:
+  potionmanager:
+    # Main command header (no args)
+    header:
+      - "<dark_gray>╔════════════════════════════════╗"
+      - "<aqua>  <bold>Potion Manager <reset><gray>v{version}"
+      - "<gray>  By <aqua><bold>veritasluxmea"
+      - "<dark_gray>╚════════════════════════════════╝"
+      - "<gray>Use <yellow>/potionmanager help<gray> for commands"
+
+    # Help command (/potionmanager help)
+    help:
+      header:
+        - "<aqua><bold>╔═══════════════════════════════════╗"
+        - "<aqua><bold>║ <white><bold>Potion Manager Commands<aqua><bold>       ║"
+        - "<aqua><bold>╚═══════════════════════════════════╝"
+        - ""
+      commands:
+        - "<yellow>  /potion <white><effect> <gray>[duration] [power] [player]"
+        - "<dark_gray>  ├─ <gray>Apply or remove potion effects"
+        - "<dark_gray>  └─ <gray>Example: <yellow>/potion speed 60 2"
+        - ""
+        - "<yellow>  /potion list"
+        - "<dark_gray>  └─ <gray>View all available effects and your tier"
+      admin_header:
+        - ""
+        - "<aqua><bold>Admin Commands:"
+      admin_commands:
+        - "<yellow>  /potionmanager reload"
+        - "<dark_gray>  └─ <gray>Reload the configuration"
+      footer:
+        - ""
+        - "<aqua><bold>═══════════════════════════════════"
+
+    # Reload command messages
+    reload:
+      success: "{prefix} <green><bold>Success! <gray>Configuration reloaded."
+      effect_count: "<gray>Loaded <aqua><bold>{count}<reset><gray> effects from config"
+      failure: "<red><bold>Error! <reset><gray>Failed to reload configuration!"
+      check_console: "<gray>Check console for details"
+      usage: "<red><bold>Usage: <reset><gray>/potionmanager reload"
+
+# ============================================
+# POTION COMMAND MESSAGES - /potion
+# ============================================
+potion:
+  # Usage message
+  usage: "<red><bold>Usage: <gray>/potion <yellow><effect> <gray>[duration] [power] [player]"
+
+  # List command messages
+  list:
+    console_only: "<red><bold>Error! <gray>The list command can only be used in-game."
+    no_effects: "<red><bold>Error! <gray>No effects are configured."
+    header:
+      - "<aqua><bold>╔════════════════╗"
+      - "<aqua><bold>║ <white><bold>Available Potion Effects <aqua><bold>              ║"
+      - "<aqua><bold>╚════════════════╝"
+    effect_line: "  <green><bold>✓ {tier_color}<bold>{effect_name} <dark_gray>[{tier_label}<dark_gray>]"
+    footer:
+      - ""
+      - "<gray>You have access to <aqua><bold>{count} <gray>effect(s)."
+      - "<gray>Usage: <yellow>/potion <aqua><effect> <gray>[duration] [power] [player]"
+      - "<aqua><bold>══════════════════════════════"
+
+  # Tier colors (used in list display)
+  tier_colors:
+    tier1: "<white>"
+    tier2: "<yellow>"
+    tier3: "<gold>"
+    tier4: "<light_purple>"
+
+  # Validation errors
+  errors:
+    invalid_effect_chars: "<red><bold>Invalid Effect! <gray>Effect names can only contain letters and underscores."
+    invalid_effect_unknown: "<red><bold>Invalid Effect! <gray>Unknown potion effect: <yellow>{effect}"
+    use_list: "<gray>Use <yellow>/potion list <gray>to view available effects."
+    disabled_effect: "<red><bold>Disabled Effect! <gray>The <yellow>{effect} <gray>effect is not enabled."
+    no_permission_effect: "<red><bold>Permission Denied! <gray>You lack permission for <yellow>{effect}<gray>."
+    no_permission_self: "<red><bold>Permission Denied! <gray>You cannot use potions on yourself."
+    no_permission_other: "<red><bold>Permission Denied! <gray>You cannot use potions on other players."
+    player_not_found: "<red><bold>Player Not Found! <gray>Cannot find player: <yellow>{player}"
+    console_needs_target: "<red><bold>Error! <gray>Console must specify a target player."
+    console_usage: "<gray>Usage: <yellow>/potion <effect> [duration] [power] <player>"
+
+  # Duration validation
+  duration:
+    invalid_number: "<red><bold>Invalid Duration! <gray>Must be a number, got: <yellow>{value}"
+    invalid_zero: "<red><bold>Invalid Duration! <gray>Duration must be greater than 0 seconds (or -1 for infinite)."
+    infinite_denied: "<red><bold>Infinite Duration Denied! <gray>Your <yellow>{tier} <gray>tier doesn't allow infinite duration for <aqua>{effect}<gray>."
+    too_long: "<red><bold>Duration Too Long! <gray>Your <yellow>{tier} <gray>tier limit for <aqua>{effect} <gray>is <yellow>{max}s <gray>(or -1 for infinite)<gray>."
+
+  # Power validation
+  power:
+    invalid_number: "<red><bold>Invalid Power! <gray>Must be a number, got: <yellow>{value}"
+    invalid_negative: "<red><bold>Invalid Power! <gray>Power must be 0 or greater."
+    too_high: "<red><bold>Power Too High! <gray>Your <yellow>{tier} <gray>tier limit for <aqua>{effect} <gray>is <yellow>{max} <gray>(Level {level})<gray>."
+
+  # Max active potions
+  max_active:
+    reached: "<red><bold>Maximum Effects Reached! <gray>You can only have <yellow>{max} <gray>active effect(s) at once."
+
+  # Cooldown messages
+  cooldown:
+    active: "{prefix} <red><bold>Cooldown Active! <gray>Wait <yellow><bold>{time} <gray>before using <aqua>{effect} <gray>again."
+
+  # Success messages
+  applied:
+    self: "<green><bold>✓ Applied <gray>{effect} <dark_gray>(<white>Level {level}<dark_gray>, <white>{duration}<dark_gray>) <gray>to yourself!"
+    other_sender: "<green><bold>✓ Applied <gray>{effect} <dark_gray>(<white>Level {level}<dark_gray>, <white>{duration}<dark_gray>) <gray>to <yellow>{target}<gray>!"
+    other_target: "<green><bold>✓ Received <gray>{effect} <gray>effect!"
+
+  # Removal messages
+  removed:
+    self: "<red><bold>✗ Removed <gray>{effect} <gray>from yourself!"
+    other_sender: "<red><bold>✗ Removed <gray>{effect} <gray>from <yellow>{target}<gray>!"
+    other_target: "<red><bold>✗ Removed <gray>{effect} <gray>effect!"
+
+# ============================================
+# SYSTEM MESSAGES
+# ============================================
+system:
+  startup:
+    separator: "========================="
+    title: "Potions Manager"
+    author: "Author: veritasluxmea"
+    version: "Version {version}"
+
+  shutdown:
+    separator: "========================="
+    title: "Potions Manager Disabled"
+    cooldowns_saved: "Cooldowns saved to disk"
+
+  update_checker:
+    checking: "Plugin is up to date - v{version}"
+    available: "Potion Manager has a new update available! New version: {new_version}"
+    download: "Download: {url}"
+    error_debug: "Could not check for updates! Stacktrace:"
+    error_no_debug: "Error checking for updates!"
+    error_enable_debug: "Enable debugging for stacktrace"
+
+# ============================================
+# DATA MANAGER MESSAGES
+# ============================================
+data:
+  cooldowns:
+    file_create_error: "Could not create cooldowns.yml file"
+    save_success: "Cooldowns saved successfully."
+    save_error: "Could not save cooldowns to disk"
+    load_none: "No cooldowns found to load."
+    load_success: "Loaded {loaded} active cooldown(s) from disk. Skipped {expired} expired cooldown(s)."
+    load_error: "Could not load cooldowns from disk"
+    invalid_uuid: "Invalid UUID in cooldowns file: {uuid}"
+    file_deleted: "Cooldowns file deleted."
+
+# ============================================
+# PLAYER JOIN MESSAGES
+# ============================================
+player:
+  join:
+    # Update notification for OP players
+    update_available:
+      - ""
+      - "{prefix} <gray>An update is available for <red>Potion Manager<gray>!"
+      - "<gray>Your server is running <red>v{current}<gray> and the newest version is <red>v{latest}<gray>!"
+      - "<gray>Download: <red>{url}"
+      - ""
+
+# ============================================
+# GENERIC MESSAGES
+# ============================================
+generic:
+  no_permission: "{prefix} <red><bold>Permission Denied! <gray>You lack the required permissions."
+  player_not_found: "{prefix} <red><bold>Player Not Found! <gray>Cannot find player <yellow>{target}<gray>."
+  config_save_error: "Could not save config.yml!"
+  messages_save_error: "Could not save messages.yml!"
