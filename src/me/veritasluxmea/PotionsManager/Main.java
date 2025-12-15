@@ -15,11 +15,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
   public static SettingsManager settings = SettingsManager.getInstance();
+  public static MessagesManager messages = MessagesManager.getInstance();
   public static CooldownManager cooldownManager;
   public static DataManager dataManager;
 
   public void onEnable() {
     settings.setup((Plugin)this);
+    messages.setup((Plugin)this);
 
     // Initialize cooldown system
     cooldownManager = new CooldownManager();
@@ -28,11 +30,12 @@ public class Main extends JavaPlugin {
     // Load cooldowns from disk
     dataManager.loadCooldowns(cooldownManager);
 
-    Bukkit.getConsoleSender().sendMessage("=========================");
-    Bukkit.getConsoleSender().sendMessage("Potions Manager");
-    Bukkit.getConsoleSender().sendMessage("Author: veritasluxmea");
-    Bukkit.getConsoleSender().sendMessage("Version " + getDescription().getVersion());
-    Bukkit.getConsoleSender().sendMessage("=========================");
+    Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.startup.separator"));
+    Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.startup.title"));
+    Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.startup.author"));
+    Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.startup.version",
+        MessagesManager.placeholder("version", getDescription().getVersion())));
+    Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.startup.separator"));
     registerCommands();
     registerListeners();
     updateChecker();
@@ -44,10 +47,10 @@ public class Main extends JavaPlugin {
       dataManager.saveCooldowns(cooldownManager);
     }
 
-    Bukkit.getConsoleSender().sendMessage("=========================");
-    Bukkit.getConsoleSender().sendMessage("Potions Manager Disabled");
-    Bukkit.getConsoleSender().sendMessage("Cooldowns saved to disk");
-    Bukkit.getConsoleSender().sendMessage("=========================");
+    Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.shutdown.separator"));
+    Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.shutdown.title"));
+    Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.shutdown.cooldowns_saved"));
+    Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.shutdown.separator"));
   }
 
   public void registerCommands() {
@@ -71,18 +74,21 @@ public class Main extends JavaPlugin {
       UpdateChecker updater = new UpdateChecker(this, "DaYV2289");
       try {
         if (updater.checkForUpdates()) {
-          getLogger().info("Potion Manager has a new update available! New version: " + UpdateChecker.getLatestVersion());
-          getLogger().info("Download: " + UpdateChecker.getResourceURL());
+          Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.update_checker.available",
+              MessagesManager.placeholder("new_version", UpdateChecker.getLatestVersion())));
+          Bukkit.getConsoleSender().sendMessage(messages.getMessage("system.update_checker.download",
+              MessagesManager.placeholder("url", UpdateChecker.getResourceURL())));
         } else {
-          getServer().getConsoleSender().sendMessage("Plugin is up to date - v" + getDescription().getVersion());
+          getServer().getConsoleSender().sendMessage(messages.getMessage("system.update_checker.checking",
+              MessagesManager.placeholder("version", getDescription().getVersion())));
         }
       } catch (Exception e) {
           if (Main.settings.getConfig().getBoolean("Debug")) {
-              getLogger().info("Could not check for updates! Stacktrace:");
+              getLogger().info(messages.getConfig().getString("system.update_checker.error_debug"));
               e.printStackTrace();
           } else if (!Main.settings.getConfig().getBoolean("Debug")) {
-              getLogger().info("Error checking for updates!");
-              getLogger().info("Enable debugging for stacktrace");
+              getLogger().info(messages.getConfig().getString("system.update_checker.error_no_debug"));
+              getLogger().info(messages.getConfig().getString("system.update_checker.error_enable_debug"));
           }
       }
     }

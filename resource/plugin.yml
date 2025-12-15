@@ -1,5 +1,5 @@
 name: PotionManager
-version: 4.1.5
+version: 4.2.0
 main: me.veritasluxmea.PotionsManager.Main
 description: PotionManager
 author: veritasluxmea
@@ -13,7 +13,7 @@ commands:
   potionmanager:
     usage: /<command> [help|reload]
     description: Potion manager's main command
-    aliases: [pm, potmgr]
+    aliases: [potmgr]
 
 permissions:
   # Base Permissions

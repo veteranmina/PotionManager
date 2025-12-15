@@ -1,14 +1,16 @@
 package me.veritasluxmea.PotionsManager.Listeners;
 
 import me.veritasluxmea.PotionsManager.Main;
-import me.veritasluxmea.PotionsManager.Methods;
 import me.veritasluxmea.PotionsManager.Utils.UpdateChecker;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.List;
 
 public class PlayerJoinListener
   implements Listener {
@@ -22,24 +24,25 @@ public class PlayerJoinListener
   public void onJoin(PlayerJoinEvent e) {
     Player player = e.getPlayer();
 
-    String version = Methods.getPlugin().getDescription().getVersion();
+    String version = this.plugin.getDescription().getVersion();
 
-    if (player.getName().equals("veritasluxmea")) {
-      player.sendMessage(Methods.color(String.valueOf(Methods.getPrefix()) + ChatColor.GRAY + " This server is using the plugin" +
-            ChatColor.RED + " Potion Manager " + ChatColor.GRAY + "Version " + ChatColor.RED +
-            Methods.getPlugin().getDescription().getVersion() + ChatColor.GRAY + "."));
-    }
+    // Developer notification removed per user request
 
     if (Main.settings.getConfig().getBoolean("Update_Checker") &&
       player.isOp()) {
       UpdateChecker updater = new UpdateChecker((JavaPlugin)this.plugin, "DaYV2289");
       try {
         if (updater.checkForUpdates()) {
-          player.sendMessage("");
-          player.sendMessage(Methods.color(String.valueOf(Methods.getPrefix()) + " &7An update is available for &cPotion Manager&7!"));
-          player.sendMessage(Methods.color("&7Your server is running &cv" + version + "&7 and the newest version is &cv" + UpdateChecker.getLatestVersion() + "&7!"));
-          player.sendMessage(Methods.color("&7Download: &c" + UpdateChecker.getResourceURL()));
-          player.sendMessage("");
+          List<String> updateLines = Main.messages.getConfig().getStringList("player.join.update_available");
+          for (String line : updateLines) {
+            player.sendMessage(MiniMessage.miniMessage().deserialize(
+                line,
+                Placeholder.parsed("prefix", Main.messages.getConfig().getString("prefix")),
+                Placeholder.unparsed("current", version),
+                Placeholder.unparsed("latest", UpdateChecker.getLatestVersion()),
+                Placeholder.unparsed("url", UpdateChecker.getResourceURL())
+            ));
+          }
         }
       } catch (Exception exception) {}
     }

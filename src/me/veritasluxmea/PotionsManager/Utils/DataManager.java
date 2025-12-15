@@ -1,5 +1,6 @@
 package me.veritasluxmea.PotionsManager.Utils;
 
+import me.veritasluxmea.PotionsManager.Main;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -37,7 +38,7 @@ public class DataManager {
                 cooldownsFile.getParentFile().mkdirs();
                 cooldownsFile.createNewFile();
             } catch (IOException e) {
-                plugin.getLogger().log(Level.SEVERE, "Could not create cooldowns.yml file", e);
+                plugin.getLogger().log(Level.SEVERE, Main.messages.getConfig().getString("data.cooldowns.file_create_error"), e);
             }
         }
         cooldownsConfig = YamlConfiguration.loadConfiguration(cooldownsFile);
@@ -84,10 +85,10 @@ public class DataManager {
 
             // Save to file
             cooldownsConfig.save(cooldownsFile);
-            plugin.getLogger().info("Cooldowns saved successfully.");
+            plugin.getLogger().info(Main.messages.getConfig().getString("data.cooldowns.save_success"));
 
         } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not save cooldowns to disk", e);
+            plugin.getLogger().log(Level.SEVERE, Main.messages.getConfig().getString("data.cooldowns.save_error"), e);
         }
     }
 
@@ -103,7 +104,7 @@ public class DataManager {
 
             ConfigurationSection cooldownsSection = cooldownsConfig.getConfigurationSection("cooldowns");
             if (cooldownsSection == null) {
-                plugin.getLogger().info("No cooldowns found to load.");
+                plugin.getLogger().info(Main.messages.getConfig().getString("data.cooldowns.load_none"));
                 return;
             }
 
@@ -118,7 +119,8 @@ public class DataManager {
                 try {
                     playerUUID = UUID.fromString(playerUUIDString);
                 } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Invalid UUID in cooldowns file: " + playerUUIDString);
+                    plugin.getLogger().warning(Main.messages.getConfig().getString("data.cooldowns.invalid_uuid")
+                        .replace("<uuid>", playerUUIDString));
                     continue;
                 }
 
@@ -164,11 +166,12 @@ public class DataManager {
             // Load the cooldowns into the manager
             cooldownManager.loadCooldowns(loadedCooldowns);
 
-            plugin.getLogger().info("Loaded " + loadedCount + " active cooldown(s) from disk. " +
-                                   "Skipped " + expiredCount + " expired cooldown(s).");
+            plugin.getLogger().info(Main.messages.getConfig().getString("data.cooldowns.load_success")
+                .replace("<loaded>", String.valueOf(loadedCount))
+                .replace("<expired>", String.valueOf(expiredCount)));
 
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not load cooldowns from disk", e);
+            plugin.getLogger().log(Level.SEVERE, Main.messages.getConfig().getString("data.cooldowns.load_error"), e);
         }
     }
 
@@ -178,7 +181,7 @@ public class DataManager {
     public void deleteCooldownsFile() {
         if (cooldownsFile.exists()) {
             cooldownsFile.delete();
-            plugin.getLogger().info("Cooldowns file deleted.");
+            plugin.getLogger().info(Main.messages.getConfig().getString("data.cooldowns.file_deleted"));
         }
     }
 

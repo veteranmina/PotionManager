@@ -24,6 +24,12 @@ tier_display_names:
 # Default: 1
 MaxActivePotions: 1
 
+# ============================================
+# DEPRECATED - Messages have been moved to messages.yml
+# ============================================
+# This section is kept for backward compatibility but is no longer used.
+# All messages are now configured in messages.yml using the modern MiniMessage format.
+# You can safely delete this section or leave it here - it will be ignored.
 Messages:
   Prefix: "&b&l[&f&lPotions&b&l]&r"
   No_Permission: "{Prefix} &c&lPermission Denied! &7You lack the required permissions."
@@ -36,6 +42,7 @@ Potion_Effect:
   Disabled: "{Prefix} &c&l✗ Disabled &7{Effect} effect."
   Target_Enabled: "{Prefix} &a&l✓ Applied &7{Effect} to &e{target}&7."
   Target_Disabled: "{Prefix} &c&l✗ Removed &7{Effect} from &e{target}&7."
+# ============================================
 
 # Potion Effect Configuration
 # Each effect can be individually configured

@@ -2,8 +2,8 @@ package me.veritasluxmea.PotionsManager.Commands;
 
 import me.veritasluxmea.PotionsManager.Main;
 import me.veritasluxmea.PotionsManager.Utils.CooldownManager;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -31,14 +31,14 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         FileConfiguration config = Main.settings.getConfig();
 
         if (args.length == 0) {
-            sender.sendMessage("§c§lUsage: §7/potion §e<effect> §7[duration] [power] [player]");
+            Main.messages.sendMessage(sender, "potion.usage");
             return true;
         }
 
         // Handle list command (player-only)
         if (args[0].equalsIgnoreCase("list")) {
             if (!(sender instanceof Player)) {
-                sender.sendMessage("§c§lError! §7The list command can only be used in-game.");
+                Main.messages.sendMessage(sender, "potion.list.console_only");
                 return true;
             }
             listAvailableEffects((Player)sender);
@@ -52,21 +52,23 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         String effectName = args[0].toLowerCase();
 
         if (!effectName.matches("[a-zA-Z_]+")) {
-            sender.sendMessage("§c§lInvalid Effect! §7Effect names can only contain letters and underscores.");
+            Main.messages.sendMessage(sender, "potion.errors.invalid_effect_chars");
             return true;
         }
 
         PotionEffectType effectType = PotionEffectType.getByName(args[0].toUpperCase());
         if (effectType == null) {
-            sender.sendMessage("§c§lInvalid Effect! §7Unknown potion effect: §e" + args[0]);
-            if (!isConsole) sender.sendMessage("§7Use §e/potion list §7to view available effects.");
+            Main.messages.sendMessage(sender, "potion.errors.invalid_effect_unknown",
+                Placeholder.unparsed("effect", args[0]));
+            if (!isConsole) Main.messages.sendMessage(sender, "potion.errors.use_list");
             return true;
         }
 
         // Check if effect is enabled in config (console bypasses this)
         if (!isConsole && !isEffectEnabled(effectName)) {
-            sender.sendMessage("§c§lDisabled Effect! §7The §e" + formatEffectName(effectName) + " §7effect is not enabled.");
-            sender.sendMessage("§7Use §e/potion list §7to view available effects.");
+            Main.messages.sendMessage(sender, "potion.errors.disabled_effect",
+                Placeholder.unparsed("effect", formatEffectName(effectName)));
+            Main.messages.sendMessage(sender, "potion.errors.use_list");
             return true;
         }
 
@@ -74,8 +76,9 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         if (!isConsole) {
             String requiredPermission = getEffectPermission(effectName);
             if (requiredPermission != null && !sender.hasPermission(requiredPermission)) {
-                sender.sendMessage("§c§lPermission Denied! §7You lack permission for §e" + formatEffectName(effectName) + "§7.");
-                sender.sendMessage("§7Use §e/potion list §7to view available effects.");
+                Main.messages.sendMessage(sender, "potion.errors.no_permission_effect",
+                    Placeholder.unparsed("effect", formatEffectName(effectName)));
+                Main.messages.sendMessage(sender, "potion.errors.use_list");
                 return true;
             }
         }
@@ -126,7 +129,7 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         } else if (args.length == 1) {
             targetPlayer = getPlayerOrSelf(sender, isConsole);
         } else {
-            sender.sendMessage("§c§lUsage: §7/potion §e<effect> §7[duration] [power] [player]");
+            Main.messages.sendMessage(sender, "potion.usage");
             return true;
         }
 
@@ -156,12 +159,12 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
             boolean isSelf = targetPlayer.equals(sender);
             if (isSelf) {
                 if (!sender.hasPermission("potionmanager.self")) {
-                    sender.sendMessage("§c§lPermission Denied! §7You cannot use potions on yourself.");
+                    Main.messages.sendMessage(sender, "potion.errors.no_permission_self");
                     return true;
                 }
             } else {
                 if (!sender.hasPermission("potionmanager.other")) {
-                    sender.sendMessage("§c§lPermission Denied! §7You cannot use potions on other players.");
+                    Main.messages.sendMessage(sender, "potion.errors.no_permission_other");
                     return true;
                 }
             }
@@ -173,7 +176,8 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
             if (maxActivePotions > 0) { // 0 means bypass this check
                 int activePotions = targetPlayer.getActivePotionEffects().size();
                 if (activePotions >= maxActivePotions) {
-                    sender.sendMessage("§c§lMaximum Effects Reached! §7You can only have §e" + maxActivePotions + " §7active effect(s) at once.");
+                    Main.messages.sendMessage(sender, "potion.max_active.reached",
+                        Placeholder.unparsed("max", String.valueOf(maxActivePotions)));
                     return true;
                 }
             }
@@ -188,13 +192,10 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
                 long remainingSeconds = cooldownManager.getRemainingCooldown(targetPlayer.getUniqueId(), effectName, tier);
                 String formattedTime = cooldownManager.formatCooldownTime(remainingSeconds);
 
-                String cooldownMessage = config.getString("Messages.Cooldown", "{Prefix} &cYou must wait &e{time} &cbefore using &a{Effect} &cagain!");
-                cooldownMessage = cooldownMessage.replace("{Prefix}", config.getString("Messages.Prefix", ""))
-                                                 .replace("{time}", formattedTime)
-                                                 .replace("{Effect}", formatEffectName(effectName));
-                cooldownMessage = ChatColor.translateAlternateColorCodes('&', cooldownMessage);
-
-                sender.sendMessage(cooldownMessage);
+                Main.messages.sendMessage(sender, "potion.cooldown.active",
+                    Placeholder.parsed("prefix", Main.messages.getConfig().getString("prefix")),
+                    Placeholder.unparsed("time", formattedTime),
+                    Placeholder.unparsed("effect", formatEffectName(effectName)));
                 return true;
             }
         }
@@ -230,20 +231,29 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
 
         if (targetPlayer == sender) {
             if (targetPlayer.hasPotionEffect(effect.getType())) {
-                sender.sendMessage("§a§l✓ Applied §7" + formatEffectName(effectName) +
-                        " §8(§fLevel " + (power + 1) + "§8, §f" + durationText + "§8) §7to yourself!");
+                Main.messages.sendMessage(sender, "potion.applied.self",
+                    Placeholder.unparsed("effect", formatEffectName(effectName)),
+                    Placeholder.unparsed("level", String.valueOf(power + 1)),
+                    Placeholder.unparsed("duration", durationText));
             } else {
-                sender.sendMessage("§c§l✗ Removed §7" + formatEffectName(effectName) + " §7from yourself!");
+                Main.messages.sendMessage(sender, "potion.removed.self",
+                    Placeholder.unparsed("effect", formatEffectName(effectName)));
             }
         } else {
             if (targetPlayer.hasPotionEffect(effect.getType())) {
-                sender.sendMessage("§a§l✓ Applied §7" + formatEffectName(effectName) +
-                        " §8(§fLevel " + (power + 1) + "§8, §f" + durationText + "§8) §7to §e" + targetPlayer.getName() + "§7!");
-                targetPlayer.sendMessage("§a§l✓ Received §7" + formatEffectName(effectName) + " §7effect!");
+                Main.messages.sendMessage(sender, "potion.applied.other_sender",
+                    Placeholder.unparsed("effect", formatEffectName(effectName)),
+                    Placeholder.unparsed("level", String.valueOf(power + 1)),
+                    Placeholder.unparsed("duration", durationText),
+                    Placeholder.unparsed("target", targetPlayer.getName()));
+                Main.messages.sendMessage(targetPlayer, "potion.applied.other_target",
+                    Placeholder.unparsed("effect", formatEffectName(effectName)));
             } else {
-                sender.sendMessage("§c§l✗ Removed §7" + formatEffectName(effectName) +
-                        " §7from §e" + targetPlayer.getName() + "§7!");
-                targetPlayer.sendMessage("§c§l✗ Removed §7" + formatEffectName(effectName) + " §7effect!");
+                Main.messages.sendMessage(sender, "potion.removed.other_sender",
+                    Placeholder.unparsed("effect", formatEffectName(effectName)),
+                    Placeholder.unparsed("target", targetPlayer.getName()));
+                Main.messages.sendMessage(targetPlayer, "potion.removed.other_target",
+                    Placeholder.unparsed("effect", formatEffectName(effectName)));
             }
         }
 
@@ -268,13 +278,15 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         ConfigurationSection effects = plugin.getConfig().getConfigurationSection("effects");
 
         if (effects == null) {
-            player.sendMessage("§c§lError! §7No effects are configured.");
+            Main.messages.sendMessage(player, "potion.list.no_effects");
             return;
         }
 
-        player.sendMessage("§b§l╔════════════════╗");
-        player.sendMessage("§b§l║ §f§lAvailable Potion Effects §b§l              ║");
-        player.sendMessage("§b§l╚════════════════╝");
+        // Send header
+        List<String> headerLines = Main.messages.getConfig().getStringList("potion.list.header");
+        for (String line : headerLines) {
+            player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage().deserialize(line));
+        }
 
         int availableCount = 0;
 
@@ -297,31 +309,24 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
 
                 // Determine tier
                 String tier = getTierForPlayer(player, effectName);
-                String tierColor;
                 String tierDisplayName = getTierDisplayName(effectName, tier);
-                String tierLabel;
+                String tierColorTag = Main.messages.getConfig().getString("potion.tier_colors." + tier, "<white>");
 
-                if (tier.equals("tier4")) {
-                    tierColor = "§d"; // Light purple for tier 4 (unlimited)
-                    tierLabel = "§d§l" + tierDisplayName.toUpperCase();
-                } else if (tier.equals("tier3")) {
-                    tierColor = "§6"; // Gold for tier 3
-                    tierLabel = "§6§l" + tierDisplayName.toUpperCase();
-                } else if (tier.equals("tier2")) {
-                    tierColor = "§e"; // Yellow for tier 2
-                    tierLabel = "§e§l" + tierDisplayName.toUpperCase();
-                } else {
-                    tierColor = "§f"; // White for tier 1
-                    tierLabel = "§7" + tierDisplayName.toUpperCase();
-                }
-                player.sendMessage("  §a§l✓ " + tierColor + "§l" + formatEffectName(effectName) + " §8[" + tierLabel + "§8]");
+                Main.messages.sendMessage(player, "potion.list.effect_line",
+                    Placeholder.parsed("tier_color", tierColorTag),
+                    Placeholder.unparsed("effect_name", formatEffectName(effectName)),
+                    Placeholder.unparsed("tier_label", tierDisplayName.toUpperCase()));
             }
         }
 
-        player.sendMessage("");
-        player.sendMessage("§7You have access to §b§l" + availableCount + " §7effect(s).");
-        player.sendMessage("§7Usage: §e/potion §b<effect> §7[duration] [power] [player]");
-        player.sendMessage("§b§l══════════════════════════════");
+        // Send footer
+        List<String> footerLines = Main.messages.getConfig().getStringList("potion.list.footer");
+        for (String line : footerLines) {
+            player.sendMessage(net.kyori.adventure.text.minimessage.MiniMessage.miniMessage().deserialize(
+                line,
+                Placeholder.unparsed("count", String.valueOf(availableCount))
+            ));
+        }
     }
 
     private String formatEffectName(String effectName) {
@@ -503,14 +508,15 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
                     // Player's tier allows infinite duration
                     return -1;
                 } else {
-                    sender.sendMessage("§c§lInfinite Duration Denied! §7Your §e" + getTierDisplayName(effectName, tier).toUpperCase() +
-                                     " §7tier doesn't allow infinite duration for §b" + formatEffectName(effectName) + "§7.");
+                    Main.messages.sendMessage(sender, "potion.duration.infinite_denied",
+                        Placeholder.unparsed("tier", getTierDisplayName(effectName, tier).toUpperCase()),
+                        Placeholder.unparsed("effect", formatEffectName(effectName)));
                     return -2; // Error code (changed from -1 to avoid confusion)
                 }
             }
 
             if (seconds <= 0) {
-                sender.sendMessage("§c§lInvalid Duration! §7Duration must be greater than 0 seconds (or -1 for infinite).");
+                Main.messages.sendMessage(sender, "potion.duration.invalid_zero");
                 return -2; // Error code
             }
 
@@ -530,13 +536,16 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
             }
 
             if (seconds > maxDuration) {
-                sender.sendMessage("§c§lDuration Too Long! §7Your §e" + getTierDisplayName(effectName, tier).toUpperCase() + " §7tier limit for §b" +
-                                 formatEffectName(effectName) + " §7is §e" + maxDuration + "s §7(or -1 for infinite)§7.");
+                Main.messages.sendMessage(sender, "potion.duration.too_long",
+                    Placeholder.unparsed("tier", getTierDisplayName(effectName, tier).toUpperCase()),
+                    Placeholder.unparsed("effect", formatEffectName(effectName)),
+                    Placeholder.unparsed("max", String.valueOf(maxDuration)));
                 return -2; // Error code
             }
             return seconds * 20; // Convert to ticks
         } catch (NumberFormatException e) {
-            sender.sendMessage("§c§lInvalid Duration! §7Must be a number, got: §e" + str);
+            Main.messages.sendMessage(sender, "potion.duration.invalid_number",
+                Placeholder.unparsed("value", str));
             return -2; // Error code
         }
     }
@@ -545,7 +554,7 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         try {
             int power = Integer.parseInt(str);
             if (power < 0) {
-                sender.sendMessage("§c§lInvalid Power! §7Power must be 0 or greater.");
+                Main.messages.sendMessage(sender, "potion.power.invalid_negative");
                 return -1;
             }
 
@@ -559,13 +568,17 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
             String tier = getTierForPlayer(player, effectName);
 
             if (power > maxPower) {
-                sender.sendMessage("§c§lPower Too High! §7Your §e" + getTierDisplayName(effectName, tier).toUpperCase() + " §7tier limit for §b" +
-                                 formatEffectName(effectName) + " §7is §e" + maxPower + " §7(Level " + (maxPower + 1) + ")§7.");
+                Main.messages.sendMessage(sender, "potion.power.too_high",
+                    Placeholder.unparsed("tier", getTierDisplayName(effectName, tier).toUpperCase()),
+                    Placeholder.unparsed("effect", formatEffectName(effectName)),
+                    Placeholder.unparsed("max", String.valueOf(maxPower)),
+                    Placeholder.unparsed("level", String.valueOf(maxPower + 1)));
                 return -1;
             }
             return power;
         } catch (NumberFormatException e) {
-            sender.sendMessage("§c§lInvalid Power! §7Must be a number, got: §e" + str);
+            Main.messages.sendMessage(sender, "potion.power.invalid_number",
+                Placeholder.unparsed("value", str));
             return -1;
         }
     }
@@ -573,7 +586,8 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
     private Player parsePlayer(String name, CommandSender sender) {
         Player target = Bukkit.getPlayer(name);
         if (target == null) {
-            sender.sendMessage("§c§lPlayer Not Found! §7Cannot find player: §e" + name);
+            Main.messages.sendMessage(sender, "potion.errors.player_not_found",
+                Placeholder.unparsed("player", name));
             return null;
         }
         return target;
@@ -581,8 +595,8 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
 
     private Player getPlayerOrSelf(CommandSender sender, boolean isConsole) {
         if (isConsole) {
-            sender.sendMessage("§c§lError! §7Console must specify a target player.");
-            sender.sendMessage("§7Usage: §e/potion <effect> [duration] [power] <player>");
+            Main.messages.sendMessage(sender, "potion.errors.console_needs_target");
+            Main.messages.sendMessage(sender, "potion.errors.console_usage");
             return null;
         } else {
             return (Player) sender;
