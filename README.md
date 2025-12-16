@@ -166,7 +166,7 @@ effects:
 
 ## Examples
 
-### Example 1: Setting Up Donor Ranks
+### Example 1: Setting Up Ranks
 
 ```yaml
 # In your permissions plugin (LuckPerms, etc.)
