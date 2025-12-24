@@ -97,6 +97,14 @@ public class Commands
                         Main.messages.reloadConfig();
                         Main.messages.setup((Plugin)this.main);
 
+                        // Reload effect config cache
+                        if (Main.effectConfig != null) {
+                            Main.effectConfig.reload();
+                        }
+
+                        // Check configuration file versions after reload
+                        this.main.checkConfigVersions();
+
                         Main.messages.sendMessage(sender, "commands.potionmanager.reload.success",
                             Placeholder.parsed("prefix", Main.messages.getConfig().getString("prefix")));
                         Main.messages.sendMessage(sender, "commands.potionmanager.reload.effect_count",

@@ -1,5 +1,5 @@
 name: PotionManager
-version: 4.2.0
+version: 4.3.0
 main: me.veritasluxmea.PotionsManager.Main
 description: PotionManager
 author: veritasluxmea
@@ -21,8 +21,16 @@ permissions:
     description: Permission to use potion effects on yourself
     default: true
 
+  potionmanager.self.clear:
+    description: Permission to clear potion effects on yourself
+    default: true
+
   potionmanager.other:
     description: Permission to use potion effects on other players
+    default: op
+
+  potionmanager.self.other:
+    description: Permission to clear potion effects on others
     default: op
 
   potionmanager.reload:
@@ -56,7 +64,9 @@ permissions:
     default: op
     children:
       potionmanager.self: true
+      potionmanager.self.clear: true
       potionmanager.other: true
+      potionmanager.other.clear: true
       potionmanager.reload: true
       potionmanager.tier.*: true
 

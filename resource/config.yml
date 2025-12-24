@@ -9,6 +9,9 @@
 #
 #=================================================================================================#
 
+# Configuration Version - Do not modify unless updating from a new plugin version
+config_version: 1
+
 # Global Tier Display Names
 # These names will be shown to players for all effects
 tier_display_names:
