@@ -2,6 +2,7 @@ package me.veritasluxmea.PotionsManager.Commands;
 
 import me.veritasluxmea.PotionsManager.Main;
 import me.veritasluxmea.PotionsManager.Utils.CooldownManager;
+import me.veritasluxmea.PotionsManager.Utils.EffectConfig;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -13,10 +14,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class PotionCommand implements CommandExecutor, TabCompleter {
@@ -45,11 +46,14 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // For console, player must be specified as the last argument
-        boolean isConsole = !(sender instanceof Player);
-        Player commandSender = isConsole ? null : (Player)sender;
+        // Handle clear command (clear all potion effects)
+        if (args[0].equalsIgnoreCase("clear")) {
+            return handleClearCommand(sender, args);
+        }
 
+        // Create command context
         String effectName = args[0].toLowerCase();
+        CommandContext context = new CommandContext(sender, effectName);
 
         if (!effectName.matches("[a-zA-Z_]+")) {
             Main.messages.sendMessage(sender, "potion.errors.invalid_effect_chars");
@@ -60,12 +64,12 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         if (effectType == null) {
             Main.messages.sendMessage(sender, "potion.errors.invalid_effect_unknown",
                 Placeholder.unparsed("effect", args[0]));
-            if (!isConsole) Main.messages.sendMessage(sender, "potion.errors.use_list");
+            if (!context.isConsole()) Main.messages.sendMessage(sender, "potion.errors.use_list");
             return true;
         }
 
         // Check if effect is enabled in config (console bypasses this)
-        if (!isConsole && !isEffectEnabled(effectName)) {
+        if (!context.isConsole() && !Main.effectConfig.isEffectEnabled(effectName)) {
             Main.messages.sendMessage(sender, "potion.errors.disabled_effect",
                 Placeholder.unparsed("effect", formatEffectName(effectName)));
             Main.messages.sendMessage(sender, "potion.errors.use_list");
@@ -73,14 +77,12 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         }
 
         // Check if player has permission for this effect (console bypasses this)
-        if (!isConsole) {
-            String requiredPermission = getEffectPermission(effectName);
-            if (requiredPermission != null && !sender.hasPermission(requiredPermission)) {
-                Main.messages.sendMessage(sender, "potion.errors.no_permission_effect",
-                    Placeholder.unparsed("effect", formatEffectName(effectName)));
-                Main.messages.sendMessage(sender, "potion.errors.use_list");
-                return true;
-            }
+        String requiredPermission = Main.effectConfig.getEffectPermission(effectName);
+        if (requiredPermission != null && !context.hasPermission(requiredPermission)) {
+            Main.messages.sendMessage(sender, "potion.errors.no_permission_effect",
+                Placeholder.unparsed("effect", formatEffectName(effectName)));
+            Main.messages.sendMessage(sender, "potion.errors.use_list");
+            return true;
         }
 
         // Default values
@@ -96,38 +98,38 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         // Parse arguments based on length
         if (args.length == 2) {
             if (isInteger(args[1])) {
-                duration = parseAndValidateDuration(args[1], sender, effectName, isConsole);
+                duration = parseAndValidateDuration(args[1], context);
                 if (duration == -2) return true; // Error check (changed from -1)
                 durationProvided = true;
-                targetPlayer = getPlayerOrSelf(sender, isConsole);
+                targetPlayer = getPlayerOrSelf(context);
             } else {
                 targetPlayer = parsePlayer(args[1], sender);
             }
         } else if (args.length == 3) {
-            duration = parseAndValidateDuration(args[1], sender, effectName, isConsole);
+            duration = parseAndValidateDuration(args[1], context);
             if (duration == -2) return true; // Error check (changed from -1)
             durationProvided = true;
 
             if (isInteger(args[2])) {
-                power = parseAndValidatePower(args[2], sender, effectName, isConsole);
+                power = parseAndValidatePower(args[2], context);
                 if (power == -1) return true;
                 powerProvided = true;
-                targetPlayer = getPlayerOrSelf(sender, isConsole);
+                targetPlayer = getPlayerOrSelf(context);
             } else {
                 targetPlayer = parsePlayer(args[2], sender);
             }
         } else if (args.length == 4) {
-            duration = parseAndValidateDuration(args[1], sender, effectName, isConsole);
+            duration = parseAndValidateDuration(args[1], context);
             if (duration == -2) return true; // Error check (changed from -1)
             durationProvided = true;
 
-            power = parseAndValidatePower(args[2], sender, effectName, isConsole);
+            power = parseAndValidatePower(args[2], context);
             if (power == -1) return true;
             powerProvided = true;
 
             targetPlayer = parsePlayer(args[3], sender);
         } else if (args.length == 1) {
-            targetPlayer = getPlayerOrSelf(sender, isConsole);
+            targetPlayer = getPlayerOrSelf(context);
         } else {
             Main.messages.sendMessage(sender, "potion.usage");
             return true;
@@ -138,9 +140,9 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         }
 
         // Set defaults to max tier values if not explicitly provided (console bypasses this)
-        if (!isConsole) {
+        if (!context.isConsole()) {
             if (!durationProvided) {
-                int maxDuration = getMaxDuration(effectName, commandSender);
+                int maxDuration = Main.effectConfig.getMaxDuration(effectName, context.getPlayer());
                 if (maxDuration == -1) {
                     // Infinite duration allowed for this tier
                     duration = -1;
@@ -150,20 +152,20 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
             }
 
             if (!powerProvided) {
-                power = getMaxPower(effectName, commandSender);
+                power = Main.effectConfig.getMaxPower(effectName, context.getPlayer());
             }
         }
 
         // Permission check (console bypasses this)
-        if (!isConsole) {
+        if (!context.isConsole()) {
             boolean isSelf = targetPlayer.equals(sender);
             if (isSelf) {
-                if (!sender.hasPermission("potionmanager.self")) {
+                if (!context.hasPermission("potionmanager.self")) {
                     Main.messages.sendMessage(sender, "potion.errors.no_permission_self");
                     return true;
                 }
             } else {
-                if (!sender.hasPermission("potionmanager.other")) {
+                if (!context.hasPermission("potionmanager.other")) {
                     Main.messages.sendMessage(sender, "potion.errors.no_permission_other");
                     return true;
                 }
@@ -171,7 +173,7 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         }
 
         // Check max active potions limit (only when adding effects, not removing, and not for console)
-        if (!isConsole && !targetPlayer.hasPotionEffect(effectType)) {
+        if (!context.isConsole() && !targetPlayer.hasPotionEffect(effectType)) {
             int maxActivePotions = config.getInt("MaxActivePotions", 1);
             if (maxActivePotions > 0) { // 0 means bypass this check
                 int activePotions = targetPlayer.getActivePotionEffects().size();
@@ -184,8 +186,10 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         }
 
         // Cooldown check (only for applying effects, not removing, and not for console)
-        if (!isConsole && !targetPlayer.hasPotionEffect(effectType)) {
-            String tier = getTierForPlayer(commandSender, effectName);
+        if (!context.isConsole() && !targetPlayer.hasPotionEffect(effectType)) {
+            // Cache tier in context for reuse
+            String tier = Main.effectConfig.getTierForPlayer(context.getPlayer(), effectName);
+            context.setTier(tier);
             CooldownManager cooldownManager = Main.cooldownManager;
 
             if (cooldownManager != null && cooldownManager.hasCooldown(targetPlayer.getUniqueId(), effectName, tier)) {
@@ -212,9 +216,14 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         }
 
         // Set cooldown after successfully applying the effect (not for console)
-        if (wasApplied && !isConsole) {
-            String tier = getTierForPlayer(commandSender, effectName);
-            int cooldownSeconds = getCooldownSeconds(effectName, tier);
+        if (wasApplied && !context.isConsole()) {
+            // Use cached tier from context (set during cooldown check)
+            String tier = context.getTier();
+            if (tier == null) {
+                // Tier wasn't cached (e.g., effect wasn't on cooldown), calculate it now
+                tier = Main.effectConfig.getTierForPlayer(context.getPlayer(), effectName);
+            }
+            int cooldownSeconds = Main.effectConfig.getCooldownSeconds(effectName, tier);
 
             if (cooldownSeconds > 0 && Main.cooldownManager != null) {
                 Main.cooldownManager.setCooldown(targetPlayer.getUniqueId(), effectName, tier, cooldownSeconds);
@@ -260,24 +269,11 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    private boolean isEffectEnabled(String effectName) {
-        ConfigurationSection effects = plugin.getConfig().getConfigurationSection("effects");
-        if (effects == null) {
-            return false;
-        }
-
-        ConfigurationSection effectSection = effects.getConfigurationSection(effectName);
-        if (effectSection == null) {
-            return false;
-        }
-
-        return effectSection.getBoolean("enabled", false);
-    }
 
     private void listAvailableEffects(Player player) {
-        ConfigurationSection effects = plugin.getConfig().getConfigurationSection("effects");
+        Map<String, EffectConfig.EffectData> enabledEffects = Main.effectConfig.getEnabledEffects();
 
-        if (effects == null) {
+        if (enabledEffects.isEmpty()) {
             Main.messages.sendMessage(player, "potion.list.no_effects");
             return;
         }
@@ -290,26 +286,19 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
 
         int availableCount = 0;
 
-        for (String effectName : effects.getKeys(false)) {
-            ConfigurationSection effectSection = effects.getConfigurationSection(effectName);
+        for (Map.Entry<String, EffectConfig.EffectData> entry : enabledEffects.entrySet()) {
+            String effectName = entry.getKey();
+            EffectConfig.EffectData effectData = entry.getValue();
 
-            if (effectSection == null) continue;
-
-            boolean enabled = effectSection.getBoolean("enabled", false);
-            String permission = effectSection.getString("permission");
-
-            if (!enabled) {
-                continue;
-            }
-
+            String permission = effectData.permission;
             boolean hasPermission = (permission == null || permission.isEmpty() || player.hasPermission(permission));
 
             if (hasPermission) {
                 availableCount++;
 
                 // Determine tier
-                String tier = getTierForPlayer(player, effectName);
-                String tierDisplayName = getTierDisplayName(effectName, tier);
+                String tier = Main.effectConfig.getTierForPlayer(player, effectName);
+                String tierDisplayName = Main.effectConfig.getTierDisplayName(tier);
                 String tierColorTag = Main.messages.getConfig().getString("potion.tier_colors." + tier, "<white>");
 
                 Main.messages.sendMessage(player, "potion.list.effect_line",
@@ -329,6 +318,81 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    private boolean handleClearCommand(CommandSender sender, String[] args) {
+        // Create context without effect name (not relevant for clear command)
+        CommandContext context = new CommandContext(sender, null);
+        Player targetPlayer = null;
+
+        // Determine target player
+        if (args.length == 1) {
+            // No target specified - use self (if player) or error (if console)
+            if (context.isConsole()) {
+                Main.messages.sendMessage(sender, "potion.clear.console_needs_target");
+                Main.messages.sendMessage(sender, "potion.clear.console_usage");
+                return true;
+            }
+            targetPlayer = context.getPlayer();
+        } else if (args.length == 2) {
+            // Target specified
+            targetPlayer = parsePlayer(args[1], sender);
+            if (targetPlayer == null) {
+                return true; // Error already sent by parsePlayer
+            }
+        } else {
+            // Too many arguments
+            Main.messages.sendMessage(sender, "potion.clear.usage");
+            return true;
+        }
+
+        // Permission checks (console bypasses these)
+        if (!context.isConsole()) {
+            boolean isSelf = targetPlayer.equals(sender);
+            if (isSelf) {
+                if (!context.hasPermission("potionmanager.self.clear")) {
+                    Main.messages.sendMessage(sender, "potion.errors.no_permission_self_clear");
+                    return true;
+                }
+            } else {
+                if (!context.hasPermission("potionmanager.other.clear")) {
+                    Main.messages.sendMessage(sender, "potion.errors.no_permission_other_clear");
+                    return true;
+                }
+            }
+        }
+
+        // Get active potion effects count before clearing
+        int effectCount = targetPlayer.getActivePotionEffects().size();
+
+        if (effectCount == 0) {
+            // No effects to clear
+            if (targetPlayer.equals(sender)) {
+                Main.messages.sendMessage(sender, "potion.clear.no_effects_self");
+            } else {
+                Main.messages.sendMessage(sender, "potion.clear.no_effects_other",
+                    Placeholder.unparsed("target", targetPlayer.getName()));
+            }
+            return true;
+        }
+
+        // Clear all potion effects
+        for (PotionEffect effect : targetPlayer.getActivePotionEffects()) {
+            targetPlayer.removePotionEffect(effect.getType());
+        }
+
+        // Send success messages
+        if (targetPlayer.equals(sender)) {
+            Main.messages.sendMessage(sender, "potion.clear.success_self",
+                Placeholder.unparsed("count", String.valueOf(effectCount)));
+        } else {
+            Main.messages.sendMessage(sender, "potion.clear.success_other_sender",
+                Placeholder.unparsed("count", String.valueOf(effectCount)),
+                Placeholder.unparsed("target", targetPlayer.getName()));
+            Main.messages.sendMessage(targetPlayer, "potion.clear.success_other_target");
+        }
+
+        return true;
+    }
+
     private String formatEffectName(String effectName) {
         String[] parts = effectName.split("_");
         StringBuilder formatted = new StringBuilder();
@@ -343,140 +407,6 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         return formatted.toString();
     }
 
-    private String getEffectPermission(String effectName) {
-        ConfigurationSection effects = plugin.getConfig().getConfigurationSection("effects");
-        if (effects == null) {
-            return null;
-        }
-
-        ConfigurationSection effectSection = effects.getConfigurationSection(effectName);
-        if (effectSection == null) {
-            return null;
-        }
-
-        String permission = effectSection.getString("permission");
-        return (permission != null && !permission.isEmpty()) ? permission : null;
-    }
-
-    private String getTierForPlayer(Player player, String effectName) {
-        ConfigurationSection effects = plugin.getConfig().getConfigurationSection("effects");
-        if (effects == null) {
-            return "tier1";
-        }
-
-        ConfigurationSection effectSection = effects.getConfigurationSection(effectName);
-        if (effectSection == null) {
-            return "tier1";
-        }
-
-        ConfigurationSection tiers = effectSection.getConfigurationSection("tiers");
-        if (tiers == null) {
-            return "tier1";
-        }
-
-        // Check tier 4 first (highest - unlimited)
-        String tier4Perm = tiers.getString("tier4.permission");
-        if (tier4Perm != null && !tier4Perm.isEmpty() && player.hasPermission(tier4Perm)) {
-            return "tier4";
-        }
-
-        // Check tier 3
-        String tier3Perm = tiers.getString("tier3.permission");
-        if (tier3Perm != null && !tier3Perm.isEmpty() && player.hasPermission(tier3Perm)) {
-            return "tier3";
-        }
-
-        // Check tier 2
-        String tier2Perm = tiers.getString("tier2.permission");
-        if (tier2Perm != null && !tier2Perm.isEmpty() && player.hasPermission(tier2Perm)) {
-            return "tier2";
-        }
-
-        // Default to tier 1
-        return "tier1";
-    }
-
-    private int getMaxDuration(String effectName, Player player) {
-        ConfigurationSection effects = plugin.getConfig().getConfigurationSection("effects");
-        if (effects == null) {
-            return 1000000; // Default max
-        }
-
-        ConfigurationSection effectSection = effects.getConfigurationSection(effectName);
-        if (effectSection == null) {
-            return 1000000; // Default max
-        }
-
-        String tier = getTierForPlayer(player, effectName);
-        ConfigurationSection tiers = effectSection.getConfigurationSection("tiers");
-
-        if (tiers == null) {
-            return effectSection.getInt("max_duration", 1000000);
-        }
-
-        return tiers.getInt(tier + ".max_duration", 1000000);
-    }
-
-    private int getMaxPower(String effectName, Player player) {
-        ConfigurationSection effects = plugin.getConfig().getConfigurationSection("effects");
-        if (effects == null) {
-            return 255; // Default max
-        }
-
-        ConfigurationSection effectSection = effects.getConfigurationSection(effectName);
-        if (effectSection == null) {
-            return 255; // Default max
-        }
-
-        String tier = getTierForPlayer(player, effectName);
-        ConfigurationSection tiers = effectSection.getConfigurationSection("tiers");
-
-        if (tiers == null) {
-            return effectSection.getInt("max_power", 255);
-        }
-
-        return tiers.getInt(tier + ".max_power", 255);
-    }
-
-    private int getCooldownSeconds(String effectName, String tier) {
-        ConfigurationSection effects = plugin.getConfig().getConfigurationSection("effects");
-        if (effects == null) {
-            return 0;
-        }
-
-        ConfigurationSection effectSection = effects.getConfigurationSection(effectName);
-        if (effectSection == null) {
-            return 0;
-        }
-
-        ConfigurationSection tiers = effectSection.getConfigurationSection("tiers");
-        if (tiers == null) {
-            return 0;
-        }
-
-        return tiers.getInt(tier + ".cooldown_seconds", 0);
-    }
-
-    private String getTierDisplayName(String effectName, String tier) {
-        // Read from global tier_display_names section
-        ConfigurationSection tierDisplayNames = plugin.getConfig().getConfigurationSection("tier_display_names");
-
-        if (tierDisplayNames != null) {
-            String displayName = tierDisplayNames.getString(tier);
-            if (displayName != null && !displayName.isEmpty()) {
-                return displayName;
-            }
-        }
-
-        // Fallback to default names if not configured globally
-        switch (tier) {
-            case "tier1": return "Basic";
-            case "tier2": return "VIP";
-            case "tier3": return "Premium";
-            case "tier4": return "Ultimate";
-            default: return tier.toUpperCase();
-        }
-    }
 
     private boolean isInteger(String str) {
         try {
@@ -487,47 +417,45 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    private int parseAndValidateDuration(String str, CommandSender sender, String effectName, boolean isConsole) {
+    private int parseAndValidateDuration(String str, CommandContext context) {
         try {
             int seconds = Integer.parseInt(str);
 
             // Allow -1 for infinite duration, reject other non-positive values
             if (seconds == -1) {
                 // User wants infinite duration
-                if (isConsole) {
+                if (context.isConsole()) {
                     // Console can always use infinite
                     return -1;
                 }
 
                 // Check if player's tier allows infinite duration
-                Player player = (Player) sender;
-                int maxDuration = getMaxDuration(effectName, player);
-                String tier = getTierForPlayer(player, effectName);
+                int maxDuration = Main.effectConfig.getMaxDuration(context.getEffectName(), context.getPlayer());
+                String tier = Main.effectConfig.getTierForPlayer(context.getPlayer(), context.getEffectName());
 
                 if (maxDuration == -1) {
                     // Player's tier allows infinite duration
                     return -1;
                 } else {
-                    Main.messages.sendMessage(sender, "potion.duration.infinite_denied",
-                        Placeholder.unparsed("tier", getTierDisplayName(effectName, tier).toUpperCase()),
-                        Placeholder.unparsed("effect", formatEffectName(effectName)));
+                    Main.messages.sendMessage(context.getSender(), "potion.duration.infinite_denied",
+                        Placeholder.unparsed("tier", Main.effectConfig.getTierDisplayName(tier).toUpperCase()),
+                        Placeholder.unparsed("effect", formatEffectName(context.getEffectName())));
                     return -2; // Error code (changed from -1 to avoid confusion)
                 }
             }
 
             if (seconds <= 0) {
-                Main.messages.sendMessage(sender, "potion.duration.invalid_zero");
+                Main.messages.sendMessage(context.getSender(), "potion.duration.invalid_zero");
                 return -2; // Error code
             }
 
             // Console bypasses tier restrictions
-            if (isConsole) {
+            if (context.isConsole()) {
                 return seconds * 20; // Convert to ticks
             }
 
-            Player player = (Player) sender;
-            int maxDuration = getMaxDuration(effectName, player);
-            String tier = getTierForPlayer(player, effectName);
+            int maxDuration = Main.effectConfig.getMaxDuration(context.getEffectName(), context.getPlayer());
+            String tier = Main.effectConfig.getTierForPlayer(context.getPlayer(), context.getEffectName());
 
             // Handle infinite duration (-1 in config)
             if (maxDuration == -1) {
@@ -536,48 +464,47 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
             }
 
             if (seconds > maxDuration) {
-                Main.messages.sendMessage(sender, "potion.duration.too_long",
-                    Placeholder.unparsed("tier", getTierDisplayName(effectName, tier).toUpperCase()),
-                    Placeholder.unparsed("effect", formatEffectName(effectName)),
+                Main.messages.sendMessage(context.getSender(), "potion.duration.too_long",
+                    Placeholder.unparsed("tier", Main.effectConfig.getTierDisplayName(tier).toUpperCase()),
+                    Placeholder.unparsed("effect", formatEffectName(context.getEffectName())),
                     Placeholder.unparsed("max", String.valueOf(maxDuration)));
                 return -2; // Error code
             }
             return seconds * 20; // Convert to ticks
         } catch (NumberFormatException e) {
-            Main.messages.sendMessage(sender, "potion.duration.invalid_number",
+            Main.messages.sendMessage(context.getSender(), "potion.duration.invalid_number",
                 Placeholder.unparsed("value", str));
             return -2; // Error code
         }
     }
 
-    private int parseAndValidatePower(String str, CommandSender sender, String effectName, boolean isConsole) {
+    private int parseAndValidatePower(String str, CommandContext context) {
         try {
             int power = Integer.parseInt(str);
             if (power < 0) {
-                Main.messages.sendMessage(sender, "potion.power.invalid_negative");
+                Main.messages.sendMessage(context.getSender(), "potion.power.invalid_negative");
                 return -1;
             }
 
             // Console bypasses tier restrictions
-            if (isConsole) {
+            if (context.isConsole()) {
                 return power;
             }
 
-            Player player = (Player) sender;
-            int maxPower = getMaxPower(effectName, player);
-            String tier = getTierForPlayer(player, effectName);
+            int maxPower = Main.effectConfig.getMaxPower(context.getEffectName(), context.getPlayer());
+            String tier = Main.effectConfig.getTierForPlayer(context.getPlayer(), context.getEffectName());
 
             if (power > maxPower) {
-                Main.messages.sendMessage(sender, "potion.power.too_high",
-                    Placeholder.unparsed("tier", getTierDisplayName(effectName, tier).toUpperCase()),
-                    Placeholder.unparsed("effect", formatEffectName(effectName)),
+                Main.messages.sendMessage(context.getSender(), "potion.power.too_high",
+                    Placeholder.unparsed("tier", Main.effectConfig.getTierDisplayName(tier).toUpperCase()),
+                    Placeholder.unparsed("effect", formatEffectName(context.getEffectName())),
                     Placeholder.unparsed("max", String.valueOf(maxPower)),
                     Placeholder.unparsed("level", String.valueOf(maxPower + 1)));
                 return -1;
             }
             return power;
         } catch (NumberFormatException e) {
-            Main.messages.sendMessage(sender, "potion.power.invalid_number",
+            Main.messages.sendMessage(context.getSender(), "potion.power.invalid_number",
                 Placeholder.unparsed("value", str));
             return -1;
         }
@@ -593,13 +520,13 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         return target;
     }
 
-    private Player getPlayerOrSelf(CommandSender sender, boolean isConsole) {
-        if (isConsole) {
-            Main.messages.sendMessage(sender, "potion.errors.console_needs_target");
-            Main.messages.sendMessage(sender, "potion.errors.console_usage");
+    private Player getPlayerOrSelf(CommandContext context) {
+        if (context.isConsole()) {
+            Main.messages.sendMessage(context.getSender(), "potion.errors.console_needs_target");
+            Main.messages.sendMessage(context.getSender(), "potion.errors.console_usage");
             return null;
         } else {
-            return (Player) sender;
+            return context.getPlayer();
         }
     }
 
@@ -608,29 +535,25 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            // First argument: suggest "list" and all available effect names
+            // First argument: suggest "list", "clear" and all available effect names
             completions.add("list");
+            completions.add("clear");
 
-            ConfigurationSection effects = plugin.getConfig().getConfigurationSection("effects");
-            if (effects != null) {
-                for (String effectName : effects.getKeys(false)) {
-                    ConfigurationSection effectSection = effects.getConfigurationSection(effectName);
-                    if (effectSection == null) continue;
+            Map<String, EffectConfig.EffectData> enabledEffects = Main.effectConfig.getEnabledEffects();
+            for (Map.Entry<String, EffectConfig.EffectData> entry : enabledEffects.entrySet()) {
+                String effectName = entry.getKey();
+                EffectConfig.EffectData effectData = entry.getValue();
 
-                    boolean enabled = effectSection.getBoolean("enabled", false);
-                    if (!enabled) continue;
-
-                    // For players, check permissions
-                    if (sender instanceof Player) {
-                        Player player = (Player) sender;
-                        String permission = effectSection.getString("permission");
-                        if (permission != null && !permission.isEmpty() && !player.hasPermission(permission)) {
-                            continue;
-                        }
+                // For players, check permissions
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
+                    String permission = effectData.permission;
+                    if (permission != null && !permission.isEmpty() && !player.hasPermission(permission)) {
+                        continue;
                     }
-
-                    completions.add(effectName);
                 }
+
+                completions.add(effectName);
             }
 
             // Filter based on what the player has typed so far
@@ -640,12 +563,20 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 2) {
-            // Second argument: could be duration or player name
-            completions.add("<duration>");
+            // Second argument depends on first argument
+            if (args[0].equalsIgnoreCase("clear")) {
+                // For clear command, second argument is always a player name
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    completions.add(player.getName());
+                }
+            } else {
+                // For effect commands, could be duration or player name
+                completions.add("<duration>");
 
-            // Add online player names
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                completions.add(player.getName());
+                // Add online player names
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    completions.add(player.getName());
+                }
             }
 
             return completions.stream()

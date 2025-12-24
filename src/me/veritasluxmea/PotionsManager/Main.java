@@ -5,6 +5,7 @@ import me.veritasluxmea.PotionsManager.Commands.PotionCommand;
 import me.veritasluxmea.PotionsManager.Listeners.PlayerJoinListener;
 import me.veritasluxmea.PotionsManager.Utils.CooldownManager;
 import me.veritasluxmea.PotionsManager.Utils.DataManager;
+import me.veritasluxmea.PotionsManager.Utils.EffectConfig;
 import me.veritasluxmea.PotionsManager.Utils.UpdateChecker;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
@@ -14,14 +15,25 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
+
+  private static final int EXPECTED_CONFIG_VERSION = 1;
+  private static final int EXPECTED_MESSAGES_VERSION = 1;
+
   public static SettingsManager settings = SettingsManager.getInstance();
   public static MessagesManager messages = MessagesManager.getInstance();
   public static CooldownManager cooldownManager;
   public static DataManager dataManager;
+  public static EffectConfig effectConfig;
 
   public void onEnable() {
     settings.setup((Plugin)this);
     messages.setup((Plugin)this);
+
+    // Check configuration file versions
+    checkConfigVersions();
+
+    // Initialize effect config cache for improved performance
+    effectConfig = new EffectConfig(this);
 
     // Initialize cooldown system
     cooldownManager = new CooldownManager();
@@ -86,11 +98,31 @@ public class Main extends JavaPlugin {
           if (Main.settings.getConfig().getBoolean("Debug")) {
               getLogger().info(messages.getConfig().getString("system.update_checker.error_debug"));
               e.printStackTrace();
-          } else if (!Main.settings.getConfig().getBoolean("Debug")) {
+          } else {
               getLogger().info(messages.getConfig().getString("system.update_checker.error_no_debug"));
               getLogger().info(messages.getConfig().getString("system.update_checker.error_enable_debug"));
           }
       }
+    }
+  }
+
+  public void checkConfigVersions() {
+    // Check config.yml version
+    int configVersion = settings.getConfig().getInt("config_version", 0);
+    if (configVersion != EXPECTED_CONFIG_VERSION) {
+      getLogger().warning("================================");
+      getLogger().warning("config.yml has a new version available!");
+      getLogger().warning("This may cause issues. Consider regenerating your config.");
+      getLogger().warning("================================");
+    }
+
+    // Check messages.yml version
+    int messagesVersion = messages.getConfig().getInt("messages_version", 0);
+    if (messagesVersion != EXPECTED_MESSAGES_VERSION) {
+      getLogger().warning("================================");
+      getLogger().warning("messages.yml has a new version available!");
+      getLogger().warning("This may cause issues. Consider regenerating your messages file.");
+      getLogger().warning("================================");
     }
   }
 }

@@ -25,6 +25,9 @@
 #
 #=================================================================================================#
 
+# Messages Configuration Version - Do not modify unless updating from a new plugin version
+messages_version: 1
+
 # Global prefix used in many messages
 prefix: "<aqua>[<white>Potions<aqua>]<reset>"
 
@@ -55,6 +58,9 @@ commands:
         - ""
         - "<yellow>  /potion list"
         - "<dark_gray>  └─ <gray>View all available effects and your tier"
+        - ""
+        - "<yellow>  /potion clear <gray>[player]"
+        - "<dark_gray>  └─ <gray>Clear all active potion effects"
       admin_header:
         - ""
         - "<aqua>Admin Commands:"
@@ -95,6 +101,17 @@ potion:
       - "<gray>Usage: <yellow>/potion <aqua><effect> <gray>[duration] [power] [player]"
       - "<aqua>========================="
 
+  # Clear command messages
+  clear:
+    usage: "<red>Usage: <gray>/potion clear <yellow>[player]"
+    console_needs_target: "<red>Error! <gray>Console must specify a target player."
+    console_usage: "<gray>Usage: <yellow>/potion clear <player>"
+    no_effects_self: "<yellow>No Effects! <gray>You don't have any active potion effects."
+    no_effects_other: "<yellow>No Effects! <gray><yellow><target> <gray>doesn't have any active potion effects."
+    success_self: "<green>✓ Cleared <gray><white><count> <gray>potion effect(s) from yourself!"
+    success_other_sender: "<green>✓ Cleared <gray><white><count> <gray>potion effect(s) from <yellow><target><gray>!"
+    success_other_target: "<green>✓ <gray>All your potion effects have been cleared!"
+
   # Tier colors (used in list display)
   tier_colors:
     tier1: "<white>"
@@ -110,7 +127,9 @@ potion:
     disabled_effect: "<red>Disabled Effect! <gray>The <yellow><effect> <gray>effect is not enabled."
     no_permission_effect: "<red>Permission Denied! <gray>You lack permission for <yellow><effect><gray>."
     no_permission_self: "<red>Permission Denied! <gray>You cannot use potions on yourself."
+    no_permission_self_Clear: "<red>Permission Denied! <gray>You cannot clear effects on yourself."
     no_permission_other: "<red>Permission Denied! <gray>You cannot use potions on other players."
+    no_permission_other_Clear: "<red>Permission Denied! <gray>You cannot clear effects on others."
     player_not_found: "<red>Player Not Found! <gray>Cannot find player: <yellow><player>"
     console_needs_target: "<red>Error! <gray>Console must specify a target player."
     console_usage: "<gray>Usage: <yellow>/potion <effect> [duration] [power] <player>"

@@ -26,8 +26,6 @@ public class PlayerJoinListener
 
     String version = this.plugin.getDescription().getVersion();
 
-    // Developer notification removed per user request
-
     if (Main.settings.getConfig().getBoolean("Update_Checker") &&
       player.isOp()) {
       UpdateChecker updater = new UpdateChecker((JavaPlugin)this.plugin, "DaYV2289");
