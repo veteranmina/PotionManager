@@ -2,7 +2,7 @@
 
 A Minecraft plugin for managing potion effects with a 4-tier permission system.
 
-[![Version](https://img.shields.io/badge/version-4.1.1-blue.svg)](https://github.com/veteranmina/PotionManager)
+[![Version](https://img.shields.io/badge/version-4.3.1-blue.svg)](https://github.com/veteranmina/PotionManager)
 [![Minecraft](https://img.shields.io/badge/minecraft-1.21.10-green.svg)](https://www.spigotmc.org/)
 
 ## Installation
