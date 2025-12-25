@@ -26,7 +26,7 @@
 #=================================================================================================#
 
 # Messages Configuration Version - Do not modify unless updating from a new plugin version
-messages_version: 1
+messages_version: 1.1
 
 # Global prefix used in many messages
 prefix: "<aqua>[<white>Potions<aqua>]<reset>"
@@ -59,8 +59,8 @@ commands:
         - "<yellow>  /potion list"
         - "<dark_gray>  └─ <gray>View all available effects and your tier"
         - ""
-        - "<yellow>  /potion clear <gray>[player]"
-        - "<dark_gray>  └─ <gray>Clear all active potion effects"
+        - "<yellow>  /potion clear <white><effect|all> <gray>[player]"
+        - "<dark_gray>  └─ <gray>Clear specific or all active potion effects"
       admin_header:
         - ""
         - "<aqua>Admin Commands:"
@@ -103,14 +103,19 @@ potion:
 
   # Clear command messages
   clear:
-    usage: "<red>Usage: <gray>/potion clear <yellow>[player]"
+    usage: "<red>Usage: <gray>/potion clear <yellow><effect|all> <gray>[player]"
     console_needs_target: "<red>Error! <gray>Console must specify a target player."
-    console_usage: "<gray>Usage: <yellow>/potion clear <player>"
+    console_usage: "<gray>Usage: <yellow>/potion clear <effect|all> <player>"
     no_effects_self: "<yellow>No Effects! <gray>You don't have any active potion effects."
     no_effects_other: "<yellow>No Effects! <gray><yellow><target> <gray>doesn't have any active potion effects."
+    no_effect_self: "<yellow>No Effect! <gray>You don't have the <yellow><effect> <gray>effect active."
+    no_effect_other: "<yellow>No Effect! <gray><yellow><target> <gray>doesn't have the <yellow><effect> <gray>effect active."
     success_self: "<green>✓ Cleared <gray><white><count> <gray>potion effect(s) from yourself!"
     success_other_sender: "<green>✓ Cleared <gray><white><count> <gray>potion effect(s) from <yellow><target><gray>!"
     success_other_target: "<green>✓ <gray>All your potion effects have been cleared!"
+    success_effect_self: "<green>✓ Removed <gray><effect> <gray>effect from yourself!"
+    success_effect_other_sender: "<green>✓ Removed <gray><effect> <gray>effect from <yellow><target><gray>!"
+    success_effect_other_target: "<green>✓ <gray>Your <yellow><effect> <gray>effect has been removed!"
 
   # Tier colors (used in list display)
   tier_colors:
@@ -160,6 +165,7 @@ potion:
     self: "<green>✓ Applied <gray><effect> <dark_gray>(<white>Level <level><dark_gray>, <white><duration><dark_gray>) <gray>to yourself!"
     other_sender: "<green>✓ Applied <gray><effect> <dark_gray>(<white>Level <level><dark_gray>, <white><duration><dark_gray>) <gray>to <yellow><target><gray>!"
     other_target: "<green>✓ Received <gray><effect> <gray>effect!"
+    exists: "<red> This effect is already active for <gray><target>!"
 
   # Removal messages
   removed:

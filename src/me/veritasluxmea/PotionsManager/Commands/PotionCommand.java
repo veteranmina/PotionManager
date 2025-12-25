@@ -208,7 +208,9 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         boolean wasApplied = false;
 
         if (targetPlayer.hasPotionEffect(effect.getType())) {
-            targetPlayer.removePotionEffect(effectType);
+            Main.messages.sendMessage(sender, "potion.applied.exists");
+            return true;
+            //targetPlayer.removePotionEffect(effectType);
         }
         else if (!targetPlayer.hasPotionEffect(effect.getType())) {
             targetPlayer.addPotionEffect(effect);
@@ -322,9 +324,22 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         // Create context without effect name (not relevant for clear command)
         CommandContext context = new CommandContext(sender, null);
         Player targetPlayer = null;
+        String effectName = null;
+        boolean clearAll = false;
+
+        // Parse arguments: /potion clear <effect|all> [playername]
+        if (args.length < 2) {
+            // Not enough arguments
+            Main.messages.sendMessage(sender, "potion.clear.usage");
+            return true;
+        }
+
+        // Get effect name or "all"
+        effectName = args[1].toLowerCase();
+        clearAll = effectName.equals("all");
 
         // Determine target player
-        if (args.length == 1) {
+        if (args.length == 2) {
             // No target specified - use self (if player) or error (if console)
             if (context.isConsole()) {
                 Main.messages.sendMessage(sender, "potion.clear.console_needs_target");
@@ -332,9 +347,9 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             targetPlayer = context.getPlayer();
-        } else if (args.length == 2) {
+        } else if (args.length == 3) {
             // Target specified
-            targetPlayer = parsePlayer(args[1], sender);
+            targetPlayer = parsePlayer(args[2], sender);
             if (targetPlayer == null) {
                 return true; // Error already sent by parsePlayer
             }
@@ -342,6 +357,18 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
             // Too many arguments
             Main.messages.sendMessage(sender, "potion.clear.usage");
             return true;
+        }
+
+        // Validate effect name if not clearing all
+        PotionEffectType effectType = null;
+        if (!clearAll) {
+            effectType = PotionEffectType.getByName(effectName.toUpperCase());
+            if (effectType == null) {
+                Main.messages.sendMessage(sender, "potion.errors.invalid_effect_unknown",
+                    Placeholder.unparsed("effect", effectName));
+                if (!context.isConsole()) Main.messages.sendMessage(sender, "potion.errors.use_list");
+                return true;
+            }
         }
 
         // Permission checks (console bypasses these)
@@ -360,34 +387,65 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        // Get active potion effects count before clearing
-        int effectCount = targetPlayer.getActivePotionEffects().size();
+        if (clearAll) {
+            // Clear all potion effects
+            int effectCount = targetPlayer.getActivePotionEffects().size();
 
-        if (effectCount == 0) {
-            // No effects to clear
-            if (targetPlayer.equals(sender)) {
-                Main.messages.sendMessage(sender, "potion.clear.no_effects_self");
-            } else {
-                Main.messages.sendMessage(sender, "potion.clear.no_effects_other",
-                    Placeholder.unparsed("target", targetPlayer.getName()));
+            if (effectCount == 0) {
+                // No effects to clear
+                if (targetPlayer.equals(sender)) {
+                    Main.messages.sendMessage(sender, "potion.clear.no_effects_self");
+                } else {
+                    Main.messages.sendMessage(sender, "potion.clear.no_effects_other",
+                        Placeholder.unparsed("target", targetPlayer.getName()));
+                }
+                return true;
             }
-            return true;
-        }
 
-        // Clear all potion effects
-        for (PotionEffect effect : targetPlayer.getActivePotionEffects()) {
-            targetPlayer.removePotionEffect(effect.getType());
-        }
+            // Clear all potion effects
+            for (PotionEffect effect : targetPlayer.getActivePotionEffects()) {
+                targetPlayer.removePotionEffect(effect.getType());
+            }
 
-        // Send success messages
-        if (targetPlayer.equals(sender)) {
-            Main.messages.sendMessage(sender, "potion.clear.success_self",
-                Placeholder.unparsed("count", String.valueOf(effectCount)));
+            // Send success messages
+            if (targetPlayer.equals(sender)) {
+                Main.messages.sendMessage(sender, "potion.clear.success_self",
+                    Placeholder.unparsed("count", String.valueOf(effectCount)));
+            } else {
+                Main.messages.sendMessage(sender, "potion.clear.success_other_sender",
+                    Placeholder.unparsed("count", String.valueOf(effectCount)),
+                    Placeholder.unparsed("target", targetPlayer.getName()));
+                Main.messages.sendMessage(targetPlayer, "potion.clear.success_other_target");
+            }
         } else {
-            Main.messages.sendMessage(sender, "potion.clear.success_other_sender",
-                Placeholder.unparsed("count", String.valueOf(effectCount)),
-                Placeholder.unparsed("target", targetPlayer.getName()));
-            Main.messages.sendMessage(targetPlayer, "potion.clear.success_other_target");
+            // Clear specific effect
+            if (!targetPlayer.hasPotionEffect(effectType)) {
+                // Player doesn't have this effect
+                if (targetPlayer.equals(sender)) {
+                    Main.messages.sendMessage(sender, "potion.clear.no_effect_self",
+                        Placeholder.unparsed("effect", formatEffectName(effectName)));
+                } else {
+                    Main.messages.sendMessage(sender, "potion.clear.no_effect_other",
+                        Placeholder.unparsed("effect", formatEffectName(effectName)),
+                        Placeholder.unparsed("target", targetPlayer.getName()));
+                }
+                return true;
+            }
+
+            // Remove the specific effect
+            targetPlayer.removePotionEffect(effectType);
+
+            // Send success messages
+            if (targetPlayer.equals(sender)) {
+                Main.messages.sendMessage(sender, "potion.clear.success_effect_self",
+                    Placeholder.unparsed("effect", formatEffectName(effectName)));
+            } else {
+                Main.messages.sendMessage(sender, "potion.clear.success_effect_other_sender",
+                    Placeholder.unparsed("effect", formatEffectName(effectName)),
+                    Placeholder.unparsed("target", targetPlayer.getName()));
+                Main.messages.sendMessage(targetPlayer, "potion.clear.success_effect_other_target",
+                    Placeholder.unparsed("effect", formatEffectName(effectName)));
+            }
         }
 
         return true;
@@ -565,9 +623,13 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         if (args.length == 2) {
             // Second argument depends on first argument
             if (args[0].equalsIgnoreCase("clear")) {
-                // For clear command, second argument is always a player name
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    completions.add(player.getName());
+                // For clear command, second argument is effect name or "all"
+                completions.add("all");
+
+                // Add all available effect names
+                Map<String, EffectConfig.EffectData> enabledEffects = Main.effectConfig.getEnabledEffects();
+                for (String effectName : enabledEffects.keySet()) {
+                    completions.add(effectName);
                 }
             } else {
                 // For effect commands, could be duration or player name
@@ -585,12 +647,20 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 3) {
-            // Third argument: could be power or player name
-            completions.add("<power>");
+            // Third argument depends on first argument
+            if (args[0].equalsIgnoreCase("clear")) {
+                // For clear command, third argument is player name
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    completions.add(player.getName());
+                }
+            } else {
+                // For effect commands, could be power or player name
+                completions.add("<power>");
 
-            // Add online player names
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                completions.add(player.getName());
+                // Add online player names
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    completions.add(player.getName());
+                }
             }
 
             return completions.stream()
