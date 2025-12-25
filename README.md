@@ -7,7 +7,7 @@ A Minecraft plugin for managing potion effects with a 4-tier permission system.
 
 ## Installation
 
-1. Download from [Releases](https://github.com/veteranmina/PotionManager/releases)
+1. Download from [Github Releases](https://github.com/veteranmina/PotionManager/releases), [Modrinth](https://modrinth.com/plugin/potionmanager) or [PaperMC Hangar](https://hangar.papermc.io/veteranmina/PotionManager)
 2. Place in `plugins/` folder
 3. Restart server
 
