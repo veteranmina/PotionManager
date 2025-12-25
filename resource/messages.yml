@@ -26,7 +26,7 @@
 #=================================================================================================#
 
 # Messages Configuration Version - Do not modify unless updating from a new plugin version
-messages_version: 1.1
+messages_version: 2
 
 # Global prefix used in many messages
 prefix: "<aqua>[<white>Potions<aqua>]<reset>"
@@ -138,6 +138,7 @@ potion:
     player_not_found: "<red>Player Not Found! <gray>Cannot find player: <yellow><player>"
     console_needs_target: "<red>Error! <gray>Console must specify a target player."
     console_usage: "<gray>Usage: <yellow>/potion <effect> [duration] [power] <player>"
+    effect_exists: "<red> This effect is already applied for <gray><target>!"
 
   # Duration validation
   duration:
@@ -165,7 +166,6 @@ potion:
     self: "<green>✓ Applied <gray><effect> <dark_gray>(<white>Level <level><dark_gray>, <white><duration><dark_gray>) <gray>to yourself!"
     other_sender: "<green>✓ Applied <gray><effect> <dark_gray>(<white>Level <level><dark_gray>, <white><duration><dark_gray>) <gray>to <yellow><target><gray>!"
     other_target: "<green>✓ Received <gray><effect> <gray>effect!"
-    exists: "<red> This effect is already active for <gray><target>!"
 
   # Removal messages
   removed:
