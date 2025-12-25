@@ -1,6 +1,7 @@
 # PotionManager
 
-A Minecraft plugin for managing potion effects with a 4-tier permission system.
+A Minecraft plugin for managing potion effects with a 4-tier permission system.  
+Prior developer H1DD3NxN1NJA: Plugin at [Spigot](https://www.spigotmc.org/resources/potion-manager-1-8-1-14-gui-potion-management-plugin.53225/)
 
 [![Version](https://img.shields.io/badge/version-4.3.1-blue.svg)](https://github.com/veteranmina/PotionManager)
 [![Minecraft](https://img.shields.io/badge/minecraft-1.21.10-green.svg)](https://www.spigotmc.org/)
