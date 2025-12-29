@@ -208,7 +208,8 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         boolean wasApplied = false;
 
         if (targetPlayer.hasPotionEffect(effect.getType())) {
-            Main.messages.sendMessage(sender, "potion.errors.effect_exists");
+            Main.messages.sendMessage(sender, "potion.errors.effect_exists",
+                    Placeholder.unparsed("target", targetPlayer.getName()));
             return true;
             //targetPlayer.removePotionEffect(effectType);
         }
