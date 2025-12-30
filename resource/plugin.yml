@@ -3,7 +3,7 @@ version: 4.3.2
 main: me.veritasluxmea.PotionsManager.Main
 description: PotionManager
 author: veritasluxmea
-api-version: '1.21.10'
+api-version: '1.21.11'
 
 commands:
   potion:

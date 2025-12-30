@@ -10,7 +10,7 @@
 #=================================================================================================#
 
 # Configuration Version - Do not modify unless updating from a new plugin version
-config_version: 1
+config_version: 2
 
 # Global Tier Display Names
 # These names will be shown to players for all effects
@@ -259,6 +259,31 @@ effects:
         cooldown_seconds: 0             # No cooldown (configure as needed)
       tier4:
         permission: "potionmanager.tier.unlimited.waterbreathing" # Unlimited permission
+        max_duration: -1                  # INFINITE DURATION!
+        max_power: 10                      # Maximum power
+        cooldown_seconds: 0               # No cooldown
+  # Breath of the Nautilus
+  breath_of_the_nautilus:
+    enabled: true
+    permission: "potionmanager.effect.breathofthenautilus"
+    tiers:
+      tier1:
+        permission: ""
+        max_duration: 300
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier2:
+        permission: "potionmanager.tier.vip"
+        max_duration: 900
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier3:
+        permission: "potionmanager.tier.premium"
+        max_duration: 3600
+        max_power: 0
+        cooldown_seconds: 0             # No cooldown (configure as needed)
+      tier4:
+        permission: "potionmanager.tier.unlimited.breathofthenautilus" # Unlimited permission
         max_duration: -1                  # INFINITE DURATION!
         max_power: 10                      # Maximum power
         cooldown_seconds: 0               # No cooldown

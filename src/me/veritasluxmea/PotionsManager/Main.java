@@ -16,7 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
 
-  private static final int EXPECTED_CONFIG_VERSION = 1;
+  private static final int EXPECTED_CONFIG_VERSION = 2;
   private static final int EXPECTED_MESSAGES_VERSION = 2;
 
   public static SettingsManager settings = SettingsManager.getInstance();
