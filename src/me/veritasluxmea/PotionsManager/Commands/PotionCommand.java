@@ -370,6 +370,25 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
                 if (!context.isConsole()) Main.messages.sendMessage(sender, "potion.errors.use_list");
                 return true;
             }
+
+            // Check if effect is enabled in config (console bypasses this)
+            if (!context.isConsole() && !Main.effectConfig.isEffectEnabled(effectName)) {
+                Main.messages.sendMessage(sender, "potion.errors.disabled_effect",
+                    Placeholder.unparsed("effect", formatEffectName(effectName)));
+                Main.messages.sendMessage(sender, "potion.errors.use_list");
+                return true;
+            }
+
+            // Check if player has permission for this specific effect (console bypasses this)
+            if (!context.isConsole()) {
+                String requiredPermission = Main.effectConfig.getEffectPermission(effectName);
+                if (requiredPermission != null && !context.hasPermission(requiredPermission)) {
+                    Main.messages.sendMessage(sender, "potion.errors.no_permission_effect",
+                        Placeholder.unparsed("effect", formatEffectName(effectName)));
+                    Main.messages.sendMessage(sender, "potion.errors.use_list");
+                    return true;
+                }
+            }
         }
 
         // Permission checks (console bypasses these)
