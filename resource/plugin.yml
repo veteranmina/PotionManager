@@ -25,12 +25,24 @@ permissions:
     description: Permission to clear potion effects on yourself
     default: true
 
+  potionmanager.self.clearall:
+    description: Permission to clear all potion effects on yourself
+    default: true
+
+  potionmanager.self.clearusable:
+    description: Permission to clear potion effects you have access to
+    default: true
+
   potionmanager.other:
     description: Permission to use potion effects on other players
     default: op
 
   potionmanager.self.other:
     description: Permission to clear potion effects on others
+    default: op
+
+  potionmanager.other.clearall:
+    description: Permission to clear all potion effects on others
     default: op
 
   potionmanager.reload:

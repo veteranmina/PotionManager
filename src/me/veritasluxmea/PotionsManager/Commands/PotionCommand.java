@@ -327,17 +327,20 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         Player targetPlayer = null;
         String effectName = null;
         boolean clearAll = false;
+        boolean clearUsable = false;
 
         // Parse arguments: /potion clear <effect|all> [playername]
+        // or /potion clear usable
         if (args.length < 2) {
             // Not enough arguments
             Main.messages.sendMessage(sender, "potion.clear.usage");
             return true;
         }
 
-        // Get effect name or "all"
+        // Get effect name, "all" or "allusable"
         effectName = args[1].toLowerCase();
         clearAll = effectName.equals("all");
+        clearUsable = effectName.equals("usable");
 
         // Determine target player
         if (args.length == 2) {
@@ -360,9 +363,9 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        // Validate effect name if not clearing all
+        // Validate effect name if not clearing all or usable
         PotionEffectType effectType = null;
-        if (!clearAll) {
+        if (!clearAll && !clearUsable) {
             effectType = PotionEffectType.getByName(effectName.toUpperCase());
             if (effectType == null) {
                 Main.messages.sendMessage(sender, "potion.errors.invalid_effect_unknown",
@@ -395,12 +398,21 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         if (!context.isConsole()) {
             boolean isSelf = targetPlayer.equals(sender);
             if (isSelf) {
-                if (!context.hasPermission("potionmanager.self.clear")) {
+                if (!context.hasPermission("potionmanager.self.clear") && !clearAll) {
                     Main.messages.sendMessage(sender, "potion.errors.no_permission_self_clear");
+                    return true;
+                } else if (!context.hasPermission("potionmanager.self.clearall") && clearAll) {
+                    Main.messages.sendMessage(sender, "potion.errors.no_permission_self_clear");
+                    return true;
+                } else if (!context.hasPermission("potionmanager.self.clearusable") && clearUsable) {
+                    Main.messages.sendMessage(sender, "potion.errors.no_permission_self_clearusable");
                     return true;
                 }
             } else {
-                if (!context.hasPermission("potionmanager.other.clear")) {
+                if (!context.hasPermission("potionmanager.other.clear") && !clearAll) {
+                    Main.messages.sendMessage(sender, "potion.errors.no_permission_other_clear");
+                    return true;
+                } else if (!context.hasPermission("potionmanager.other.clearall") && clearAll) {
                     Main.messages.sendMessage(sender, "potion.errors.no_permission_other_clear");
                     return true;
                 }
@@ -437,6 +449,45 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
                     Placeholder.unparsed("target", targetPlayer.getName()));
                 Main.messages.sendMessage(targetPlayer, "potion.clear.success_other_target");
             }
+        } else if (clearUsable) {
+            int effectCount = targetPlayer.getActivePotionEffects().size();
+            int clearedeffectCount = 0;
+
+            if  (effectCount == 0) {
+                // No effects to clear
+                if  (targetPlayer.equals(sender)) {
+                    Main.messages.sendMessage(sender, "potion.clear.no_effects_self");
+                }
+                return true;
+            }
+            for (PotionEffect effect : targetPlayer.getActivePotionEffects()) {
+                String currentEffectName = effect.getType().getKey().getKey().toLowerCase();
+
+                // Check if effect is enabled in config
+                if (!Main.effectConfig.isEffectEnabled(currentEffectName)) {
+                    continue; // Skip disabled effects
+                }
+
+                // Check if player has permission (or if no permission is required)
+                String requiredPermission = Main.effectConfig.getEffectPermission(currentEffectName);
+                if (requiredPermission == null || requiredPermission.isEmpty() || context.hasPermission(requiredPermission)) {
+                    targetPlayer.removePotionEffect(effect.getType());
+                    clearedeffectCount++;
+                }
+            }
+
+            if (clearedeffectCount > 0) {
+                if (targetPlayer.equals(sender)) {
+                    Main.messages.sendMessage(sender, "potion.clear.success_self_allusable",
+                        Placeholder.unparsed("count",  String.valueOf(clearedeffectCount)),
+                        Placeholder.unparsed("totcount",  String.valueOf(effectCount)));
+                }
+            } else {
+                // No usable effects found to clear
+                if (targetPlayer.equals(sender)) {
+                    Main.messages.sendMessage(sender, "potion.clear.no_effects_self");
+                }
+            }
         } else {
             // Clear specific effect
             if (!targetPlayer.hasPotionEffect(effectType)) {
@@ -453,6 +504,7 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
             }
 
             // Remove the specific effect
+            if (targetPlayer.equals(sender)) {}
             targetPlayer.removePotionEffect(effectType);
 
             // Send success messages
@@ -643,14 +695,31 @@ public class PotionCommand implements CommandExecutor, TabCompleter {
         if (args.length == 2) {
             // Second argument depends on first argument
             if (args[0].equalsIgnoreCase("clear")) {
-                // For clear command, second argument is effect name or "all"
-                completions.add("all");
+                // For clear command, second argument is effect name, "all", or "usable"
+                // Keep "all" and "usable" at the top by filtering them separately
+                List<String> priorityOptions = new ArrayList<>();
+                List<String> effectOptions = new ArrayList<>();
+
+                // Add priority options first
+                if ("all".startsWith(args[1].toLowerCase())) {
+                    priorityOptions.add("all");
+                }
+                if ("usable".startsWith(args[1].toLowerCase())) {
+                    priorityOptions.add("usable");
+                }
 
                 // Add all available effect names
                 Map<String, EffectConfig.EffectData> enabledEffects = Main.effectConfig.getEnabledEffects();
                 for (String effectName : enabledEffects.keySet()) {
-                    completions.add(effectName);
+                    if (effectName.toLowerCase().startsWith(args[1].toLowerCase())) {
+                        effectOptions.add(effectName);
+                    }
                 }
+
+                // Combine: priority options first, then effects
+                completions.addAll(priorityOptions);
+                completions.addAll(effectOptions);
+                return completions;
             } else {
                 // For effect commands, could be duration or player name
                 completions.add("<duration>");
